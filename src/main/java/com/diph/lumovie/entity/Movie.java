@@ -1,0 +1,38 @@
+package com.diph.lumovie.entity;
+
+import com.diph.lumovie.enums.MovieStatus;
+import com.diph.lumovie.enums.MovieType;
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.List;
+
+@Entity @Table(name = "movies")
+@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
+public class Movie extends BaseEntity {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Column(nullable = false) private String title;
+    private String originalTitle;
+    @Column(columnDefinition = "TEXT") private String description;
+    private String posterUrl;
+    private String trailerUrl;
+    private String backdropUrl;
+    private Integer releaseYear;
+    private Integer duration;
+    private String director;
+    private String actors;
+    private Double avgRating = 0.0;
+    private Long viewCount = 0L;
+    private String country;
+    private String language;
+    private String slug;
+    @Enumerated(EnumType.STRING) private MovieStatus status = MovieStatus.COMPLETED;
+    @Enumerated(EnumType.STRING) private MovieType type = MovieType.MOVIE;
+    @ManyToMany
+    @JoinTable(name = "movie_genres",
+        joinColumns = @JoinColumn(name = "movie_id"),
+        inverseJoinColumns = @JoinColumn(name = "genre_id"))
+    private List<Genre> genres;
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL) private List<Episode> episodes;
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL) private List<Rating> ratings;
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL) private List<Comment> comments;
+}
