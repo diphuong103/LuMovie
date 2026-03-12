@@ -5,7 +5,7 @@
      FRAGMENT: movie-card
      Usage: <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
 ════════════════════════════════════════════════════ -->
-<div th:fragment="card(movie)" class="movie-card">
+<div th:fragment="card(movie)" class="movie-card" th:if="${movie != null}">
   <a th:href="@{/movies/{slug}(slug=${movie.slug})}">
     <div class="movie-poster">
       <!-- Poster image -->

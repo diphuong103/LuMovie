@@ -15,6 +15,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service @RequiredArgsConstructor
@@ -58,19 +59,30 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public List<MovieResponse> getTrending() {
-        return movieRepository.findTop10ByOrderByViewCountDesc().stream().map(movieMapper::toResponse).collect(Collectors.toList());
+        return movieRepository.findTop10ByOrderByViewCountDesc()
+                .stream()
+                .map(movieMapper::toResponse)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<MovieResponse> getTopRated() {
-        return movieRepository.findTop10ByOrderByAvgRatingDesc().stream().map(movieMapper::toResponse).collect(Collectors.toList());
+        return movieRepository.findTop10ByOrderByAvgRatingDesc()
+                .stream()
+                .map(movieMapper::toResponse)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<MovieResponse> getLatest() {
-        return movieRepository.findTop10ByOrderByCreatedAtDesc().stream().map(movieMapper::toResponse).collect(Collectors.toList());
+        return movieRepository.findTop10ByOrderByCreatedAtDesc()
+                .stream()
+                .map(movieMapper::toResponse)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
-
     @Override @Transactional
     public MovieResponse create(CreateMovieRequest request) {
         Movie movie = Movie.builder()
