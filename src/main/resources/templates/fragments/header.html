@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<nav th:fragment="header" class="navbar">
+
+  <!-- LOGO -->
+  <a th:href="@{/}" class="nav-logo">LuMovie</a>
+
+  <!-- NAV LINKS -->
+  <ul class="nav-links">
+    <li><a th:href="@{/}"
+           th:classappend="${currentPage == 'home'} ? 'active'">Trang Chủ</a></li>
+    <li><a th:href="@{/movies?type='MOVIE'}"
+           th:classappend="${currentPage == 'movie'} ? 'active'">Phim Lẻ</a></li>
+    <li><a th:href="@{/movies?type='SERIES'}"
+           th:classappend="${currentPage == 'series'} ? 'active'">Phim Bộ</a></li>
+    <li><a th:href="@{/movies?type='ANIME'}"
+           th:classappend="${currentPage == 'anime'} ? 'active'">Anime</a></li>
+    <li><a th:href="@{/movies?type='TV_SHOW'}"
+           th:classappend="${currentPage == 'tvshow'} ? 'active'">TV Show</a></li>
+    <li><a th:href="@{/movies?sort='latest'}"
+           th:classappend="${currentPage == 'latest'} ? 'active'">Mới Nhất</a></li>
+  </ul>
+
+  <!-- RIGHT ACTIONS -->
+  <div class="nav-right">
+    <a th:href="@{/search}" class="nav-icon-btn" title="Tìm kiếm">🔍</a>
+
+    <!-- Not logged in -->
+    <div sec:authorize="isAnonymous()">
+      <a th:href="@{/auth/login}" class="btn btn-outline btn-sm">Đăng Nhập</a>
+      <a th:href="@{/auth/register}" class="btn btn-gold btn-sm" style="margin-left:8px">Đăng Ký</a>
+    </div>
+
+    <!-- Logged in -->
+    <div sec:authorize="isAuthenticated()" style="display:flex;align-items:center;gap:10px">
+      <div class="nav-icon-btn" title="Thông báo">🔔</div>
+
+      <div class="user-menu" style="position:relative">
+        <div class="user-avatar" onclick="toggleUserMenu()" style="
+          width:36px;height:36px;border-radius:50%;
+          background:linear-gradient(135deg,#c8922a,#e8b84b);
+          display:flex;align-items:center;justify-content:center;
+          font-weight:700;font-size:0.88rem;color:#0a0a0e;
+          cursor:pointer;border:2px solid rgba(200,146,42,0.4);">
+          <!-- ✅ Chỉ dùng sec:authentication, không dùng #authentication -->
+          <span sec:authentication="name">U</span>
+        </div>
+
+        <div id="userDropdown" style="
+          display:none;position:absolute;top:44px;right:0;
+          background:#141419;border:1px solid rgba(200,146,42,0.2);
+          border-radius:12px;min-width:200px;
+          box-shadow:0 16px 48px rgba(0,0,0,0.6);overflow:hidden;z-index:100;">
+
+          <div style="padding:14px 16px;border-bottom:1px solid rgba(200,146,42,0.1)">
+            <div style="font-size:0.85rem;font-weight:600;color:#e8e0d0"
+                 sec:authentication="name">Username</div>
+            <div style="font-size:0.72rem;color:#605848;margin-top:2px">Thành viên</div>
+          </div>
+
+          <a th:href="@{/profile}" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.83rem;color:#a09880;transition:all 0.15s"
+             onmouseover="this.style.background='rgba(200,146,42,0.06)';this.style.color='#e8b84b'"
+             onmouseout="this.style.background='';this.style.color='#a09880'">
+            <span>👤</span> Trang Cá Nhân
+          </a>
+          <a th:href="@{/profile/watchlist}" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.83rem;color:#a09880;transition:all 0.15s"
+             onmouseover="this.style.background='rgba(200,146,42,0.06)';this.style.color='#e8b84b'"
+             onmouseout="this.style.background='';this.style.color='#a09880'">
+            <span>❤️</span> Danh Sách Yêu Thích
+          </a>
+          <a th:href="@{/profile/history}" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.83rem;color:#a09880;transition:all 0.15s"
+             onmouseover="this.style.background='rgba(200,146,42,0.06)';this.style.color='#e8b84b'"
+             onmouseout="this.style.background='';this.style.color='#a09880'">
+            <span>📺</span> Lịch Sử Xem
+          </a>
+
+          <div sec:authorize="hasRole('ADMIN')">
+            <div style="height:1px;background:rgba(200,146,42,0.1);margin:4px 0"></div>
+            <a th:href="@{/admin}" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.83rem;color:#a78bfa;transition:all 0.15s"
+               onmouseover="this.style.background='rgba(124,58,237,0.06)'"
+               onmouseout="this.style.background=''">
+              <span>⚙️</span> Quản Trị
+            </a>
+          </div>
+
+          <div style="height:1px;background:rgba(200,146,42,0.1);margin:4px 0"></div>
+          <form th:action="@{/auth/logout}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" style="
+              width:100%;display:flex;align-items:center;gap:10px;
+              padding:11px 16px;font-size:0.83rem;color:#e84055;
+              background:none;border:none;cursor:pointer;text-align:left;
+              transition:all 0.15s;font-family:'DM Sans',sans-serif;"
+                    onmouseover="this.style.background='rgba(232,64,85,0.06)'"
+                    onmouseout="this.style.background=''">
+              <span>🚪</span> Đăng Xuất
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleUserMenu() {
+      const d = document.getElementById('userDropdown');
+      d.style.display = d.style.display === 'none' ? 'block' : 'none';
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.user-menu')) {
+        const d = document.getElementById('userDropdown');
+        if (d) d.style.display = 'none';
+      }
+    });
+  </script>
+</nav>
+</html>

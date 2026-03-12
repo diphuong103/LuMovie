@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -23,4 +24,5 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Modifying
     @Query("UPDATE Movie m SET m.viewCount = m.viewCount + 1 WHERE m.id = :id")
     void incrementViewCount(Long id);
+
 }

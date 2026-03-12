@@ -2,6 +2,7 @@ package com.diph.lumovie.service.impl;
 
 import com.diph.lumovie.dto.request.CreateMovieRequest;
 import com.diph.lumovie.dto.response.*;
+import com.diph.lumovie.entity.Genre;
 import com.diph.lumovie.entity.Movie;
 import com.diph.lumovie.enums.MovieType;
 import com.diph.lumovie.exception.ResourceNotFoundException;
@@ -114,6 +115,17 @@ public class MovieServiceImpl implements MovieService {
 
     @Override @Transactional
     public void incrementView(Long id) { movieRepository.incrementViewCount(id); }
+
+    @Override
+    public Movie getFeatured() {
+        return movieRepository.findTop10ByOrderByViewCountDesc()
+                .stream().findFirst().orElse(null);
+    }
+
+    @Override
+    public List<Genre> getAllGenres() {
+        return genreRepository.findAll();
+    }
 
     private PageResponse<MovieResponse> toPageResponse(Page<Movie> page) {
         return PageResponse.<MovieResponse>builder()

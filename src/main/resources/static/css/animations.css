@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════
+   LuMovie — animations.css
+════════════════════════════════════════ */
+:root {
+  --target-width: 70%;
+}
+/* ── Entry animations ── */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes scaleIn  { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
+@keyframes slideLeft{ from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+
+/* ── Continuous ── */
+@keyframes shimmer   { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes spin      { to{transform:rotate(360deg)} }
+@keyframes pulse     { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes glow      { 0%,100%{box-shadow:0 0 12px rgba(200,146,42,0.3)} 50%{box-shadow:0 0 28px rgba(200,146,42,0.6)} }
+@keyframes goldShine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── Classes ── */
+.animate-fadeup    { animation: fadeUp 0.6s ease both; }
+.animate-fadein    { animation: fadeIn 0.4s ease both; }
+.animate-scalein   { animation: scaleIn 0.5s ease both; }
+.animate-slideleft { animation: slideLeft 0.5s ease both; }
+.animate-float     { animation: float 3s ease-in-out infinite; }
+.animate-glow      { animation: glow 2s ease-in-out infinite; }
+.animate-spin      { animation: spin 1s linear infinite; }
+.animate-pulse     { animation: pulse 2s ease-in-out infinite; }
+
+/* ── Stagger delays ── */
+.delay-0  { animation-delay: 0s; }
+.delay-1  { animation-delay: 0.1s; }
+.delay-2  { animation-delay: 0.2s; }
+.delay-3  { animation-delay: 0.3s; }
+.delay-4  { animation-delay: 0.4s; }
+.delay-5  { animation-delay: 0.5s; }
+.delay-6  { animation-delay: 0.6s; }
+
+/* ── Page transitions ── */
+.page-wrapper {
+  animation: fadeIn 0.4s ease both;
+}
+
+/* ── Hover lift ── */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+}
+
+/* ── Gold text shine ── */
+.gold-shine {
+  background: linear-gradient(90deg, #c8922a, #f5d280, #e8b84b, #fdeaa8, #c8922a);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: goldShine 3s linear infinite;
+}
+
+/* ── Skeleton loader ── */
+.skeleton {
+  background: linear-gradient(90deg, #141419 25%, #1a1a22 50%, #141419 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+/* ── Loading spinner ── */
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid rgba(200,146,42,0.2);
+  border-top-color: #e8b84b;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.spinner-sm { width: 20px; height: 20px; border-width: 2px; }
+
+/* ── Progress bar fill ── */
+@keyframes fillBar {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--target-width, 100%);
+  }
+}
+
+.progress-animated {
+  animation: fillBar 1s ease-out both;
+}
+
+/* ── Ripple effect (buttons) ── */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+.btn::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: none;
+  background: rgba(255,255,255,0.15);
+  pointer-events: none;
+}
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}

@@ -1,6 +1,8 @@
 package com.diph.lumovie.service;
 import com.diph.lumovie.dto.request.CreateMovieRequest;
 import com.diph.lumovie.dto.response.*;
+import com.diph.lumovie.entity.Genre;
+import com.diph.lumovie.entity.Movie;
 import com.diph.lumovie.enums.MovieType;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
@@ -18,4 +20,7 @@ public interface MovieService {
     MovieResponse update(Long id, CreateMovieRequest request);
     void delete(Long id);
     void incrementView(Long id);
+    Movie getFeatured();
+    List<Genre> getAllGenres();
+
 }

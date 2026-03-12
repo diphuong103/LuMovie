@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title th:text="(${movie?.id != null} ? 'Sửa Phim' : 'Thêm Phim') + ' — Admin'">Phim — Admin</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="page-wrapper">
+  <div class="admin-layout">
+    <div th:replace="~{fragments/sidebar :: sidebar}" th:with="adminPage=${movie?.id != null ? 'movies' : 'movie-create'}"></div>
+
+    <main class="admin-content">
+      <div class="breadcrumb" style="margin-bottom:20px">
+        <a th:href="@{/admin}">Dashboard</a>
+        <span class="breadcrumb-sep">›</span>
+        <a th:href="@{/admin/movies}">Quản Lý Phim</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current" th:text="${movie?.id != null ? 'Sửa: ' + movie.title : 'Thêm Phim Mới'}">Thêm Phim</span>
+      </div>
+
+      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:4px;color:#e8b84b;margin-bottom:28px"
+          th:text="${movie?.id != null ? 'CHỈNH SỬA PHIM' : 'THÊM PHIM MỚI'}">THÊM PHIM</h1>
+
+      <!-- Success/Error alerts -->
+      <div th:if="${success}" class="alert alert-success" style="margin-bottom:20px">✅ <span th:text="${success}">Thành công</span></div>
+      <div th:if="${error}" class="alert alert-error" style="margin-bottom:20px">⚠️ <span th:text="${error}">Lỗi</span></div>
+
+      <form th:action="${movie?.id != null ? '/admin/movies/' + movie.id + '/edit' : '/admin/movies/create'}"
+            method="post" enctype="multipart/form-data">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <input type="hidden" name="id" th:value="${movie?.id}"/>
+
+        <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start">
+
+          <!-- LEFT: Main info -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+
+            <div class="card">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:20px">📝 Thông Tin Cơ Bản</div>
+
+              <div class="form-group">
+                <label class="form-label">Tên Phim <span style="color:#e84055">*</span></label>
+                <input type="text" name="title" class="form-input" required
+                       placeholder="Nhập tên phim" th:value="${movie?.title}"
+                       oninput="generateSlug(this.value)"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Tên Gốc</label>
+                <input type="text" name="originalTitle" class="form-input"
+                       placeholder="Original title (English...)" th:value="${movie?.originalTitle}"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Slug (URL) <span style="color:#e84055">*</span></label>
+                <input type="text" name="slug" id="slugInput" class="form-input" required
+                       placeholder="ten-phim-bang-tieng-anh" th:value="${movie?.slug}"/>
+                <div class="form-hint">Tự động sinh từ tên phim. VD: /movies/<span id="slugPreview" style="color:#e8b84b">ten-phim</span></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Mô Tả <span style="color:#e84055">*</span></label>
+                <textarea name="description" class="form-input" rows="5" required
+                          placeholder="Nội dung phim..." th:text="${movie?.description}"></textarea>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div class="form-group">
+                  <label class="form-label">Đạo Diễn</label>
+                  <input type="text" name="director" class="form-input" placeholder="Tên đạo diễn" th:value="${movie?.director}"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Quốc Gia</label>
+                  <input type="text" name="country" class="form-input" placeholder="Mỹ, Hàn Quốc..." th:value="${movie?.country}"/>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Diễn Viên</label>
+                <input type="text" name="cast" class="form-input" placeholder="Tom Hanks, Leonardo DiCaprio..." th:value="${movie?.cast}"/>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+                <div class="form-group">
+                  <label class="form-label">Năm Phát Hành</label>
+                  <input type="number" name="releaseYear" class="form-input" min="1900" max="2030"
+                         placeholder="2024" th:value="${movie?.releaseYear}"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Thời Lượng (phút)</label>
+                  <input type="number" name="duration" class="form-input" min="1"
+                         placeholder="120" th:value="${movie?.duration}"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Ngôn Ngữ</label>
+                  <input type="text" name="language" class="form-input" placeholder="Tiếng Anh" th:value="${movie?.language}"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- Media URLs -->
+            <div class="card">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:20px">🖼️ Media</div>
+
+              <div class="form-group">
+                <label class="form-label">URL Poster</label>
+                <input type="url" name="posterUrl" class="form-input" id="posterUrl"
+                       placeholder="https://example.com/poster.jpg" th:value="${movie?.posterUrl}"
+                       oninput="previewPoster(this.value)"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">URL Banner (ảnh nền)</label>
+                <input type="url" name="bannerUrl" class="form-input"
+                       placeholder="https://example.com/banner.jpg" th:value="${movie?.bannerUrl}"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">URL Trailer</label>
+                <input type="url" name="trailerUrl" class="form-input"
+                       placeholder="https://youtube.com/..." th:value="${movie?.trailerUrl}"/>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">URL Video (phim lẻ)</label>
+                <input type="url" name="videoUrl" class="form-input"
+                       placeholder="https://..." th:value="${movie?.videoUrl}"/>
+                <div class="form-hint">Chỉ điền nếu là phim lẻ. Phim bộ/anime thêm tập riêng.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Classification + poster preview -->
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <!-- Poster preview -->
+            <div class="card">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:3px;color:#e8b84b;margin-bottom:12px">Preview</div>
+              <div id="posterPreview" style="
+                width:100%;aspect-ratio:2/3;border-radius:8px;overflow:hidden;
+                background:#1a1a22;border:1px solid rgba(200,146,42,0.2);
+                display:flex;align-items:center;justify-content:center;font-size:3rem">
+                <img th:if="${movie?.posterUrl != null}" th:src="${movie.posterUrl}" id="posterImg"
+                     style="width:100%;height:100%;object-fit:cover"/>
+                <span th:unless="${movie?.posterUrl != null}" id="posterPlaceholder">🎬</span>
+              </div>
+            </div>
+
+            <!-- Classification -->
+            <div class="card">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:3px;color:#e8b84b;margin-bottom:16px">🏷️ Phân Loại</div>
+
+              <div class="form-group">
+                <label class="form-label">Loại Phim <span style="color:#e84055">*</span></label>
+                <select name="type" class="form-input" required>
+                  <option value="MOVIE" th:selected="${movie?.type?.name() == 'MOVIE'}">🎥 Phim Lẻ</option>
+                  <option value="SERIES" th:selected="${movie?.type?.name() == 'SERIES'}">📺 Phim Bộ</option>
+                  <option value="ANIME" th:selected="${movie?.type?.name() == 'ANIME'}">🎌 Anime</option>
+                  <option value="TV_SHOW" th:selected="${movie?.type?.name() == 'TV_SHOW'}">📡 TV Show</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Trạng Thái</label>
+                <select name="status" class="form-input">
+                  <option value="COMPLETED" th:selected="${movie?.status?.name() == 'COMPLETED'}">✅ Hoàn Thành</option>
+                  <option value="ONGOING" th:selected="${movie?.status?.name() == 'ONGOING'}">🔄 Đang Chiếu</option>
+                  <option value="UPCOMING" th:selected="${movie?.status?.name() == 'UPCOMING'}">🔜 Sắp Ra Mắt</option>
+                </select>
+              </div>
+
+              <!-- Genres checkboxes -->
+              <div class="form-group">
+                <label class="form-label">Thể Loại</label>
+                <div style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;padding:2px">
+                  <label th:each="genre : ${allGenres}"
+                         style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
+                    <input type="checkbox" name="genreIds" th:value="${genre.id}"
+                           th:checked="${movie != null and movie.genres != null and #lists.contains(movie.genres.![id], genre.id)}"
+                           style="width:15px;height:15px;accent-color:#e8b84b"/>
+                    <span style="font-size:0.83rem;color:#a09880" th:text="${genre.name}">Thể loại</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-gold w-full btn-lg" style="justify-content:center">
+              <span th:text="${movie?.id != null ? '💾 Lưu Thay Đổi' : '➕ Thêm Phim'}">Lưu</span>
+            </button>
+            <a th:href="@{/admin/movies}" class="btn btn-ghost w-full" style="justify-content:center">Hủy</a>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<script>
+function generateSlug(title) {
+  const slug = title.toLowerCase()
+    .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g,'a')
+    .replace(/[èéẹẻẽêềếệểễ]/g,'e')
+    .replace(/[ìíịỉĩ]/g,'i')
+    .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g,'o')
+    .replace(/[ùúụủũưừứựửữ]/g,'u')
+    .replace(/[ỳýỵỷỹ]/g,'y')
+    .replace(/đ/g,'d')
+    .replace(/[^a-z0-9\s-]/g,'')
+    .trim().replace(/\s+/g,'-');
+  document.getElementById('slugInput').value = slug;
+  document.getElementById('slugPreview').textContent = slug || 'ten-phim';
+}
+
+function previewPoster(url) {
+  if (url) {
+    const preview = document.getElementById('posterPreview');
+    preview.innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">';
+  }
+}
+</script>
+</body>
+</html>

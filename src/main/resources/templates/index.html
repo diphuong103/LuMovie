@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LuMovie — Xem Phim Online Miễn Phí</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+  <link rel="stylesheet" th:href="@{/css/animations.css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="page-wrapper">
+
+  <!-- ════════════════════════
+       HERO SECTION
+  ═════════════════════════ -->
+  <section class="hero-section" style="
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+    padding:80px 24px 60px;position:relative;overflow:hidden;">
+
+    <!-- Background glow -->
+    <div style="
+      position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);
+      width:900px;height:900px;border-radius:50%;pointer-events:none;
+      background:radial-gradient(ellipse,rgba(200,146,42,0.06) 0%,rgba(139,92,246,0.04) 35%,transparent 65%);">
+    </div>
+
+    <p class="animate-fadeup" style="font-size:0.72rem;letter-spacing:6px;color:#605848;text-transform:uppercase;margin-bottom:24px">
+      Nền Tảng Xem Phim Trực Tuyến
+    </p>
+
+    <h1 class="animate-fadeup delay-1" style="
+      font-family:'Bebas Neue',sans-serif;
+      font-size:clamp(4rem,12vw,9rem);
+      letter-spacing:8px;line-height:0.92;margin-bottom:24px;
+      background:linear-gradient(180deg,#fdeaa8 0%,#f5d280 30%,#e8b84b 65%,rgba(200,146,42,0.5) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+      LUMOVIE<br>ONLINE
+    </h1>
+
+    <p class="animate-fadeup delay-2" style="
+      font-family:'Crimson Pro',serif;font-style:italic;font-size:1.15rem;
+      color:#a09880;margin-bottom:44px;font-weight:300;">
+      Hàng nghìn bộ phim &amp; anime chất lượng cao — Miễn phí, không quảng cáo
+    </p>
+
+    <!-- Genre Pills -->
+    <div class="animate-fadeup delay-3" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:700px;margin-bottom:48px">
+      <a th:href="@{/movies?genre='hanh-dong'}" class="genre-pill gp-1"><span>⚔ Hành Động</span></a>
+      <a th:href="@{/movies?genre='vien-tuong'}" class="genre-pill gp-2"><span>🚀 Viễn Tưởng</span></a>
+      <a th:href="@{/movies?genre='tinh-cam'}" class="genre-pill gp-3"><span>💕 Tình Cảm</span></a>
+      <a th:href="@{/movies?genre='phieu-luu'}" class="genre-pill gp-4"><span>🌿 Phiêu Lưu</span></a>
+      <a th:href="@{/movies?genre='hai-huoc'}" class="genre-pill gp-5"><span>😂 Hài Hước</span></a>
+      <a th:href="@{/movies?genre='kinh-di'}" class="genre-pill gp-6"><span>🔮 Kinh Dị</span></a>
+      <a th:href="@{/movies?type='ANIME'}" class="genre-pill gp-7"><span>🎌 Anime</span></a>
+    </div>
+
+    <!-- Search -->
+    <form th:action="@{/search}" method="get" class="animate-fadeup delay-4"
+          style="width:100%;max-width:520px">
+      <div class="search-bar">
+        <input type="text" name="q" placeholder="Tìm kiếm phim, diễn viên, thể loại..."/>
+        <button type="submit" class="btn btn-gold btn-sm">🔍 Tìm</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ════════════════════════
+       FEATURED BANNER
+  ═════════════════════════ -->
+  <div th:if="${featuredMovie != null}" style="
+    position:relative;margin:0 48px 60px;
+    border-radius:16px;overflow:hidden;height:380px;
+    background:#141419;border:1px solid rgba(200,146,42,0.15);
+    display:flex;align-items:flex-end;">
+
+    <!-- Poster bg -->
+    <img th:if="${featuredMovie.bannerUrl != null}"
+         th:src="${featuredMovie.bannerUrl}"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.4"/>
+
+    <!-- Gradient overlay -->
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,10,14,0.98) 0%,rgba(10,10,14,0.7) 50%,rgba(10,10,14,0.1) 100%)"></div>
+
+    <!-- Content -->
+    <div style="position:relative;z-index:1;padding:40px 48px;max-width:600px">
+      <div class="badge badge-gold" style="margin-bottom:16px">⭐ Nổi Bật Tuần Này</div>
+
+      <h2 style="
+        font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:4px;
+        line-height:1;margin-bottom:12px;
+        background:linear-gradient(135deg,#f5d280,#e8b84b);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;"
+        th:text="${featuredMovie.title}">Tên Phim</h2>
+
+      <p style="font-family:'Crimson Pro',serif;font-size:1rem;color:#a09880;
+                line-height:1.6;margin-bottom:20px;font-style:italic"
+         th:text="${#strings.abbreviate(featuredMovie.description, 160)}">Mô tả phim...</p>
+
+      <div style="display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap">
+        <span th:each="genre : ${featuredMovie.genres}" class="banner-tag"
+              style="padding:4px 12px;border-radius:20px;font-size:0.72rem;border:1px solid rgba(255,255,255,0.1);color:#a09880"
+              th:text="${genre.name}">Thể loại</span>
+        <span style="padding:4px 12px;border-radius:20px;font-size:0.72rem;border:1px solid rgba(255,255,255,0.1);color:#a09880"
+              th:text="${featuredMovie.releaseYear}">2024</span>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center">
+        <a th:href="@{/movies/{slug}/watch(slug=${featuredMovie.slug})}" class="btn btn-gold btn-lg">▶ Xem Ngay</a>
+        <a th:href="@{/movies/{slug}(slug=${featuredMovie.slug})}" class="btn btn-ghost btn-lg">ℹ Thông Tin</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════
+       TRENDING
+  ═════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-title">🔥 Đang Thịnh Hành</div>
+<!--      <a th:href="@{/movies?sort=trending}" class="section-more">Xem tất cả →</a>-->
+      <a th:href="@{/movies(sort='trending')}" class="section-more">Xem tất cả →</a>
+    </div>
+    <div class="movie-grid">
+      <div th:each="movie : ${trendingMovies}"
+           th:replace="~{fragments/movie-card :: card(movie=${movie})}">
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════
+       THỂ LOẠI
+  ═════════════════════════ -->
+  <section style="padding:60px 48px">
+    <div class="section-header">
+      <div class="section-title">🎭 Thể Loại</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px">
+      <a th:each="genre,stat : ${genres}"
+         th:href="@{/movies(genre=${genre.slug})}"
+         th:style="'padding:16px 12px;border-radius:12px;text-align:center;cursor:pointer;transition:all 0.2s;border:1px solid;background:' + ${genreColors[stat.index % genreColors.size()].bg} + ';border-color:' + ${genreColors[stat.index % genreColors.size()].border}"
+         style="display:block;text-decoration:none"
+         onmouseover="this.style.transform='translateY(-3px)'"
+         onmouseout="this.style.transform=''">
+        <div style="font-size:1.6rem;margin-bottom:8px" th:text="${genre.icon ?: '🎬'}">🎬</div>
+        <div style="font-size:0.78rem;font-weight:500;color:#a09880" th:text="${genre.name}">Thể loại</div>
+      </a>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════
+       MỚI NHẤT
+  ═════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-title">✨ Mới Cập Nhật</div>
+      <a th:href="@{/movies?sort='latest'}" class="section-more">Xem tất cả →</a>
+    </div>
+    <div class="movie-grid">
+      <div th:each="movie : ${latestMovies}"
+           th:replace="~{fragments/movie-card :: card(movie=${movie})}">
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════
+       TOP RATED
+  ═════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-title">⭐ Đánh Giá Cao Nhất</div>
+      <a th:href="@{/movies?sort='topRated'}" class="section-more">Xem tất cả →</a>
+    </div>
+    <div class="movie-grid">
+      <div th:each="movie : ${topRatedMovies}"
+           th:replace="~{fragments/movie-card :: card(movie=${movie})}">
+      </div>
+    </div>
+  </section>
+
+</div><!-- end page-wrapper -->
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+</body>
+</html>
+

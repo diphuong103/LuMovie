@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404 — Không Tìm Thấy — LuMovie</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+
+<div class="page-wrapper" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);text-align:center;padding:48px">
+  <div>
+    <!-- Decorative glow -->
+    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      width:600px;height:600px;border-radius:50%;pointer-events:none;
+      background:radial-gradient(ellipse,rgba(200,146,42,0.05) 0%,transparent 65%)"></div>
+
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:10rem;
+                background:linear-gradient(180deg,#fdeaa8,#f5d280,#e8b84b,rgba(200,146,42,0.3));
+                -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+                background-clip:text;line-height:1;margin-bottom:0;
+                position:relative;z-index:1">404</div>
+
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:6px;
+                color:#605848;margin-bottom:16px;position:relative;z-index:1">TRANG KHÔNG TỒN TẠI</div>
+
+    <p style="font-family:'Crimson Pro',serif;font-style:italic;font-size:1.1rem;
+              color:#605848;margin-bottom:40px;max-width:400px;line-height:1.6;
+              position:relative;z-index:1">
+      Trang bạn đang tìm kiếm có thể đã bị xóa, đổi tên hoặc tạm thời không khả dụng.
+    </p>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1">
+      <a th:href="@{/}" class="btn btn-gold btn-lg">🏠 Về Trang Chủ</a>
+      <a th:href="@{/movies}" class="btn btn-ghost btn-lg">🎬 Xem Phim</a>
+    </div>
+
+    <!-- Suggestions -->
+    <div style="margin-top:60px;position:relative;z-index:1">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:16px">TRONG KHI ĐÓ, XEM THỬ PHIM NÀY</div>
+      <div class="movie-grid" style="grid-template-columns:repeat(4,1fr);max-width:800px;margin:0 auto">
+        <div th:each="movie : ${suggestedMovies}"
+             th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

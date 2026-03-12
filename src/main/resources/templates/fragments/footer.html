@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<footer th:fragment="footer" class="footer">
+  <div class="footer-grid">
+    <!-- Brand -->
+    <div>
+      <div class="footer-logo-text">LuMovie</div>
+      <p class="footer-desc">
+        Nền tảng xem phim trực tuyến miễn phí — hàng nghìn bộ phim,
+        phim bộ và anime chất lượng cao. Không quảng cáo, không gián đoạn.
+      </p>
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <a href="#" style="width:34px;height:34px;border-radius:8px;background:#141419;border:1px solid rgba(200,146,42,0.15);display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(200,146,42,0.4)'" onmouseout="this.style.borderColor='rgba(200,146,42,0.15)'">📘</a>
+        <a href="#" style="width:34px;height:34px;border-radius:8px;background:#141419;border:1px solid rgba(200,146,42,0.15);display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(200,146,42,0.4)'" onmouseout="this.style.borderColor='rgba(200,146,42,0.15)'">🐦</a>
+        <a href="#" style="width:34px;height:34px;border-radius:8px;background:#141419;border:1px solid rgba(200,146,42,0.15);display:flex;align-items:center;justify-content:center;font-size:0.9rem;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(200,146,42,0.4)'" onmouseout="this.style.borderColor='rgba(200,146,42,0.15)'">💬</a>
+      </div>
+    </div>
+
+    <!-- Khám phá -->
+    <div>
+      <div class="footer-col-title">Khám Phá</div>
+      <ul class="footer-links-list">
+        <li><a th:href="@{/movies?type='MOVIE'}">Phim Lẻ</a></li>
+        <li><a th:href="@{/movies?type='SERIES'}">Phim Bộ</a></li>
+        <li><a th:href="@{/movies?type='ANIME'}">Anime</a></li>
+        <li><a th:href="@{/movies?type='TV_SHOW'}">TV Show</a></li>
+        <li><a th:href="@{/movies?sort='latest'}">Mới Nhất</a></li>
+        <li><a th:href="@{/movies?sort='topRated'}">Đánh Giá Cao</a></li>
+      </ul>
+    </div>
+
+    <!-- Thể Loại -->
+    <div>
+      <div class="footer-col-title">Thể Loại</div>
+      <ul class="footer-links-list">
+        <li><a th:href="@{/movies?genre='hanh-dong'}">⚔ Hành Động</a></li>
+        <li><a th:href="@{/movies?genre='vien-tuong'}">🚀 Viễn Tưởng</a></li>
+        <li><a th:href="@{/movies?genre='tinh-cam'}">💕 Tình Cảm</a></li>
+        <li><a th:href="@{/movies?genre='kinh-di'}">🔮 Kinh Dị</a></li>
+        <li><a th:href="@{/movies?genre='hai-huoc'}">😂 Hài Hước</a></li>
+        <li><a th:href="@{/movies?genre='phieu-luu'}">🌿 Phiêu Lưu</a></li>
+      </ul>
+    </div>
+
+    <!-- Hỗ Trợ -->
+    <div>
+      <div class="footer-col-title">Hỗ Trợ</div>
+      <ul class="footer-links-list">
+        <li><a href="#">Giới Thiệu</a></li>
+        <li><a href="#">Liên Hệ</a></li>
+        <li><a href="#">Điều Khoản Sử Dụng</a></li>
+        <li><a href="#">Chính Sách Bảo Mật</a></li>
+        <li><a href="#">DMCA / Báo Vi Phạm</a></li>
+        <li><a href="#">FAQ</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© 2024 LuMovie. Chỉ dành cho mục đích học tập.</span>
+    <span>Made with ❤️ by <span style="color:#e8b84b">diph</span> · Spring Boot + Thymeleaf</span>
+    <span>🇻🇳 Tiếng Việt</span>
+  </div>
+</footer>
+</html>

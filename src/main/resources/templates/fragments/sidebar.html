@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<aside th:fragment="sidebar" class="admin-sidebar">
+  <div style="padding:0 20px 20px;border-bottom:1px solid rgba(200,146,42,0.1);margin-bottom:16px">
+    <a th:href="@{/}" style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:4px;background:linear-gradient(135deg,#f5d280,#e8b84b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">LuMovie</a>
+    <div style="font-size:0.68rem;color:#605848;letter-spacing:2px;text-transform:uppercase;margin-top:2px">Admin Panel</div>
+  </div>
+
+  <div class="sidebar-group-title">Tổng Quan</div>
+  <a th:href="@{/admin}" class="sidebar-link" th:classappend="${adminPage == 'dashboard'} ? 'active'">
+    <span class="sidebar-icon">📊</span> Dashboard
+  </a>
+
+  <div class="sidebar-group-title" style="margin-top:16px">Nội Dung</div>
+  <a th:href="@{/admin/movies}" class="sidebar-link" th:classappend="${adminPage == 'movies'} ? 'active'">
+    <span class="sidebar-icon">🎬</span> Quản Lý Phim
+  </a>
+  <a th:href="@{/admin/movies/create}" class="sidebar-link" th:classappend="${adminPage == 'movie-create'} ? 'active'">
+    <span class="sidebar-icon">➕</span> Thêm Phim Mới
+  </a>
+  <a th:href="@{/admin/genres}" class="sidebar-link" th:classappend="${adminPage == 'genres'} ? 'active'">
+    <span class="sidebar-icon">🏷️</span> Thể Loại
+  </a>
+  <a th:href="@{/admin/episodes}" class="sidebar-link" th:classappend="${adminPage == 'episodes'} ? 'active'">
+    <span class="sidebar-icon">📺</span> Tập Phim
+  </a>
+
+  <div class="sidebar-group-title" style="margin-top:16px">Người Dùng</div>
+  <a th:href="@{/admin/users}" class="sidebar-link" th:classappend="${adminPage == 'users'} ? 'active'">
+    <span class="sidebar-icon">👥</span> Quản Lý User
+  </a>
+  <a th:href="@{/admin/comments}" class="sidebar-link" th:classappend="${adminPage == 'comments'} ? 'active'">
+    <span class="sidebar-icon">💬</span> Bình Luận
+  </a>
+
+  <div class="sidebar-group-title" style="margin-top:16px">Hệ Thống</div>
+  <a th:href="@{/admin/stats}" class="sidebar-link" th:classappend="${adminPage == 'stats'} ? 'active'">
+    <span class="sidebar-icon">📈</span> Thống Kê
+  </a>
+  <a th:href="@{/}" class="sidebar-link">
+    <span class="sidebar-icon">🌐</span> Xem Trang Web
+  </a>
+</aside>
+</html>

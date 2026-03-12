@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- ═══════════════════════════════════════════════
+     FRAGMENT: movie-card
+     Usage: <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+════════════════════════════════════════════════════ -->
+<div th:fragment="card(movie)" class="movie-card">
+  <a th:href="@{/movies/{slug}(slug=${movie.slug})}">
+    <div class="movie-poster">
+      <!-- Poster image -->
+      <img th:if="${movie.posterUrl != null}"
+           th:src="${movie.posterUrl}"
+           th:alt="${movie.title}"
+           loading="lazy"/>
+      <!-- Placeholder if no poster -->
+      <div th:unless="${movie.posterUrl != null}" class="poster-placeholder"
+           th:style="'background:linear-gradient(135deg,' + ${movie.gradientFrom ?: '#1a0a2e'} + ',' + ${movie.gradientTo ?: '#0a1a2e'} + ')'">
+        🎬
+        <div class="poster-label" th:text="${movie.title}">Movie Title</div>
+      </div>
+
+      <!-- Badge -->
+      <div th:if="${movie.isNew}" class="movie-badge badge-new">✨ Mới</div>
+      <div th:if="${movie.viewCount > 100000 and !movie.isNew}" class="movie-badge badge-hot">🔥 Hot</div>
+      <div th:if="${movie.type == 'SERIES' or movie.type == 'ANIME'}"
+           class="movie-badge badge-ep"
+           th:text="'Tập ' + ${movie.totalEpisodes}">Tập 12</div>
+
+      <!-- Rating -->
+      <div class="movie-rating">
+        ⭐ <span th:text="${#numbers.formatDecimal(movie.avgRating, 1, 1)}">8.5</span>
+      </div>
+
+      <!-- Hover overlay -->
+      <div class="movie-overlay">
+        <div class="play-btn">▶</div>
+      </div>
+    </div>
+  </a>
+
+  <div class="movie-info">
+    <a th:href="@{/movies/{slug}(slug=${movie.slug})}">
+      <div class="movie-title" th:text="${movie.title}">Movie Title</div>
+    </a>
+    <div class="movie-meta">
+      <span th:text="${movie.releaseYear}">2024</span>
+      <span class="meta-dot"></span>
+      <span th:text="${movie.genres != null and !#lists.isEmpty(movie.genres) ? movie.genres[0].name : 'Phim'}">Hành Động</span>
+    </div>
+  </div>
+</div>
+</html>

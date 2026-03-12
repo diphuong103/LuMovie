@@ -18,7 +18,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private static final String[] PUBLIC = {
-        "/api/auth/**","/api/movies/**","/api/genres/**","/api/search/**",
+            "/", "/index",
+            "/error",
+            "/css/**", "/js/**", "/images/**",
+            "/api/auth/**","/api/movies/**","/api/genres/**","/api/search/**",
         "/swagger-ui/**","/v3/api-docs/**","/actuator/**"
     };
     @Bean

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>500 — Lỗi Server — LuMovie</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="page-wrapper" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);text-align:center;padding:48px">
+  <div style="position:relative;z-index:1">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:10rem;
+                background:linear-gradient(180deg,#fca5a5,#ef4444,rgba(232,64,85,0.4));
+                -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1">500</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:6px;color:#605848;margin-bottom:16px">LỖI MÁY CHỦ</div>
+    <p style="font-family:'Crimson Pro',serif;font-style:italic;font-size:1.1rem;color:#605848;margin-bottom:40px;max-width:400px;line-height:1.6">
+      Đã xảy ra lỗi không mong muốn. Chúng tôi đang khắc phục. Vui lòng thử lại sau.
+    </p>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <a th:href="@{/}" class="btn btn-gold btn-lg">🏠 Về Trang Chủ</a>
+      <button onclick="window.location.reload()" class="btn btn-ghost btn-lg">🔄 Thử Lại</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

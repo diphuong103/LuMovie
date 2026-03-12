@@ -1,0 +1,1 @@
+// File "xương sống": Chứa các hàm fetch gọi lên Backend
