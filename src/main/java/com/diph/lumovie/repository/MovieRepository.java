@@ -20,6 +20,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     List<Movie> findTop10ByOrderByViewCountDesc();
     List<Movie> findTop10ByOrderByAvgRatingDesc();
     List<Movie> findTop10ByOrderByCreatedAtDesc();
+    boolean existsBySlug(String slug);
     Page<Movie> findByTitleContainingIgnoreCase(String title, Pageable pageable);
     @Modifying
     @Query("UPDATE Movie m SET m.viewCount = m.viewCount + 1 WHERE m.id = :id")

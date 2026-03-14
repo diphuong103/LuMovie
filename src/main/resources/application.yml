@@ -77,3 +77,8 @@ logging:
   level:
     com.diph.lumovie: DEBUG
     org.springframework.security: WARN
+
+crawler:
+  base-url: https://ophim1.com
+  delay-ms: 500
+  scheduled-pages: 3

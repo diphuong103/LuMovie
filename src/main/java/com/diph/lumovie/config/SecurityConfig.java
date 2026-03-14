@@ -20,6 +20,7 @@ public class SecurityConfig {
     private static final String[] PUBLIC = {
             "/", "/index",
             "/error",
+            "/dev/**",
             "/css/**", "/js/**", "/images/**",
             "/api/auth/**","/api/movies/**","/api/genres/**","/api/search/**",
         "/swagger-ui/**","/v3/api-docs/**","/actuator/**"

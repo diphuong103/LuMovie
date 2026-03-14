@@ -14,6 +14,7 @@ public class Movie extends BaseEntity {
     private String originalTitle;
     @Column(columnDefinition = "TEXT") private String description;
     private String posterUrl;
+    private String thumbnailUrl;
     private String trailerUrl;
     private String backdropUrl;
     private Integer releaseYear;
