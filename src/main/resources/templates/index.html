@@ -7,6 +7,7 @@
   <title>LuMovie — Xem Phim Online Miễn Phí</title>
   <link rel="stylesheet" th:href="@{/css/style.css}"/>
   <link rel="stylesheet" th:href="@{/css/animations.css}"/>
+  <link rel="stylesheet" th:href="@{/css/carousel.css}"/>
 </head>
 <body>
 
@@ -78,15 +79,12 @@
     background:#141419;border:1px solid rgba(200,146,42,0.15);
     display:flex;align-items:flex-end;">
 
-    <!-- Poster bg -->
     <img th:if="${featuredMovie.backdropUrl != null}"
          th:src="${featuredMovie.backdropUrl}"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.4"/>
 
-    <!-- Gradient overlay -->
     <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,10,14,0.98) 0%,rgba(10,10,14,0.7) 50%,rgba(10,10,14,0.1) 100%)"></div>
 
-    <!-- Content -->
     <div style="position:relative;z-index:1;padding:40px 48px;max-width:600px">
       <div class="badge badge-gold" style="margin-bottom:16px">⭐ Nổi Bật Tuần Này</div>
 
@@ -95,7 +93,7 @@
         line-height:1;margin-bottom:12px;
         background:linear-gradient(135deg,#f5d280,#e8b84b);
         -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;"
-        th:text="${featuredMovie.title}">Tên Phim</h2>
+          th:text="${featuredMovie.title}">Tên Phim</h2>
 
       <p style="font-family:'Crimson Pro',serif;font-size:1rem;color:#a09880;
                 line-height:1.6;margin-bottom:20px;font-style:italic"
@@ -124,14 +122,21 @@
       <div class="section-title">🔥 Đang Thịnh Hành</div>
       <a th:href="@{/movies(sort='trending')}" class="section-more">Xem tất cả →</a>
     </div>
-    <!-- Neu' co phim -->
-    <div class="movie-grid"
-         th:if="${trendingMovies != null and !#lists.isEmpty(trendingMovies)}">
-      <div th:each="movies : ${trendingMovies}">
-        <div th:replace="~{fragments/movie-card :: card(movie = ${movies})}"></div>
+
+    <div th:if="${trendingMovies != null and !#lists.isEmpty(trendingMovies)}"
+         class="carousel-outer" id="trending-outer">
+      <button class="carousel-btn carousel-btn-prev" onclick="slide('trending',-1)" id="trending-prev"><</button>
+      <div class="carousel-track-wrap">
+        <div class="carousel-track" id="trending-track">
+          <div th:each="movie : ${trendingMovies}" class="movie-carousel-item">
+            <div th:replace="~{fragments/movie-card :: card(movie = ${movie})}"></div>
+          </div>
+        </div>
       </div>
+      <button class="carousel-btn carousel-btn-next" onclick="slide('trending',1)" id="trending-next">></button>
+      <div class="carousel-dots" id="trending-dots"></div>
     </div>
-    <!-- Nếu chưa có phim -->
+
     <div th:if="${trendingMovies == null or #lists.isEmpty(trendingMovies)}">
       <p style="opacity:.7">Chưa có phim nào</p>
     </div>
@@ -142,41 +147,35 @@
   <!-- ════════════════════════
        THỂ LOẠI
   ═════════════════════════ -->
-  <section style="padding:60px 48px">
-
+  <section class="section">
     <div class="section-header">
       <div class="section-title">🎭 Thể Loại</div>
+      <a th:href="@{/genres}" class="section-more">Xem tất cả →</a>
     </div>
 
-    <!-- Có dữ liệu -->
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px"
-         th:if="${genres != null and !#lists.isEmpty(genres)}">
-
-      <a th:each="genre,stat : ${genres}"
-         th:href="@{/movies(genre=${genre.slug})}"
-         th:style="'padding:16px 12px;border-radius:12px;text-align:center;cursor:pointer;transition:all 0.2s;border:1px solid;background:'
-                + ${genreColors[stat.index % genreColors.size()].bg}
-                + ';border-color:'
-                + ${genreColors[stat.index % genreColors.size()].border}"
-         style="display:block;text-decoration:none"
-         onmouseover="this.style.transform='translateY(-3px)'"
-         onmouseout="this.style.transform=''">
-
-        <div style="font-size:1.6rem;margin-bottom:8px"
-             th:text="${genre.icon != null ? genre.icon : '🎬'}">🎬</div>
-
-        <div style="font-size:0.78rem;font-weight:500;color:#a09880"
-             th:text="${genre.name}">Thể loại</div>
-
-      </a>
-
+    <div th:if="${genres != null and !#lists.isEmpty(genres)}"
+         class="carousel-outer" id="genre-outer">
+      <button class="carousel-btn carousel-btn-prev" onclick="slide('genre',-1)" id="genre-prev"><</button>
+      <div class="carousel-track-wrap">
+        <div class="carousel-track" id="genre-track">
+          <div th:each="genre,stat : ${genres}" class="genre-carousel-item">
+            <a th:href="@{/movies(genre=${genre.slug})}"
+               class="genre-card"
+               th:style="'border-color:' + ${genreColors[stat.index % genreColors.size()].border}
+                       + ';background:' + ${genreColors[stat.index % genreColors.size()].bg}">
+              <div class="genre-icon" th:text="${genre.icon != null ? genre.icon : '🎬'}">🎬</div>
+              <div class="genre-name" th:text="${genre.name}">Thể loại</div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-btn carousel-btn-next" onclick="slide('genre',1)" id="genre-next">></button>
+      <div class="carousel-dots" id="genre-dots"></div>
     </div>
 
-    <!-- Không có dữ liệu -->
     <div th:if="${genres == null or #lists.isEmpty(genres)}">
       <p style="opacity:.7">Chưa có thể loại</p>
     </div>
-
   </section>
 
   <div class="divider"></div>
@@ -189,14 +188,21 @@
       <div class="section-title">✨ Mới Cập Nhật</div>
       <a th:href="@{/movies?sort='latest'}" class="section-more">Xem tất cả →</a>
     </div>
-    <!-- Neu' co phim -->
-    <div class="movie-grid"
-         th:if="${latestMovies != null and !#lists.isEmpty(latestMovies)}">
-      <div th:each="movies : ${latestMovies}">
-        <div th:replace="~{fragments/movie-card :: card(movie = ${movies})}"></div>
+
+    <div th:if="${latestMovies != null and !#lists.isEmpty(latestMovies)}"
+         class="carousel-outer" id="latest-outer">
+      <button class="carousel-btn carousel-btn-prev" onclick="slide('latest',-1)" id="latest-prev"><</button>
+      <div class="carousel-track-wrap">
+        <div class="carousel-track" id="latest-track">
+          <div th:each="movie : ${latestMovies}" class="movie-carousel-item">
+            <div th:replace="~{fragments/movie-card :: card(movie = ${movie})}"></div>
+          </div>
+        </div>
       </div>
+      <button class="carousel-btn carousel-btn-next" onclick="slide('latest',1)" id="latest-next">></button>
+      <div class="carousel-dots" id="latest-dots"></div>
     </div>
-    <!-- Nếu chưa có phim -->
+
     <div th:if="${latestMovies == null or #lists.isEmpty(latestMovies)}">
       <p style="opacity:.7">Chưa có phim nào</p>
     </div>
@@ -212,14 +218,21 @@
       <div class="section-title">⭐ Đánh Giá Cao Nhất</div>
       <a th:href="@{/movies?sort='topRated'}" class="section-more">Xem tất cả →</a>
     </div>
-    <!-- Neu' co phim -->
-    <div class="movie-grid"
-    th:if="${topRatedMovies != null and !#lists.isEmpty(topRatedMovies)}">
-<div th:each="movies : ${topRatedMovies}">
-  <div th:replace="~{fragments/movie-card :: card(movie = ${movies})}"></div>
-</div>
+
+    <div th:if="${topRatedMovies != null and !#lists.isEmpty(topRatedMovies)}"
+         class="carousel-outer" id="toprated-outer">
+      <button class="carousel-btn carousel-btn-prev" onclick="slide('toprated',-1)" id="toprated-prev"><</button>
+      <div class="carousel-track-wrap">
+        <div class="carousel-track" id="toprated-track">
+          <div th:each="movie : ${topRatedMovies}" class="movie-carousel-item">
+            <div th:replace="~{fragments/movie-card :: card(movie = ${movie})}"></div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-btn carousel-btn-next" onclick="slide('toprated',1)" id="toprated-next">></button>
+      <div class="carousel-dots" id="toprated-dots"></div>
     </div>
-    <!-- Nếu chưa có phim -->
+
     <div th:if="${topRatedMovies == null or #lists.isEmpty(topRatedMovies)}">
       <p style="opacity:.7">Chưa có phim nào</p>
     </div>
@@ -229,6 +242,8 @@
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 
+<!-- Carousel JS — đặt cuối body, sau khi DOM đã render xong -->
+<script th:src="@{/js/carousel.js}"></script>
+
 </body>
 </html>
-
