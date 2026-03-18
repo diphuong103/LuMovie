@@ -140,6 +140,11 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- ═══ Log ═══ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

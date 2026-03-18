@@ -17,9 +17,19 @@ import java.util.Optional;
 public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecificationExecutor<Movie> {
     Optional<Movie> findBySlug(String slug);
     Page<Movie> findByType(MovieType type, Pageable pageable);
-    List<Movie> findTop10ByOrderByViewCountDesc();
-    List<Movie> findTop10ByOrderByAvgRatingDesc();
-    List<Movie> findTop10ByOrderByCreatedAtDesc();
+    List<Movie> findTop10ByOrderByViewCountDesc();  // Training
+    List<Movie> findTop10ByOrderByAvgRatingDesc();  // Đánh giá cao
+    List<Movie> findTop10ByOrderByCreatedAtDesc();  // Mới cập nhật
+//
+//    @Query("SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres ORDER BY m.viewCount DESC")
+//    List<Movie> findTop10ByOrderByViewCountDesc();
+//
+//    @Query("SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres ORDER BY m.avgRating DESC")
+//    List<Movie> findTop10ByOrderByAvgRatingDesc();
+//
+//    @Query("SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres ORDER BY m.createdAt DESC")
+//    List<Movie> findTop10ByOrderByCreatedAtDesc();
+
     boolean existsBySlug(String slug);
     Page<Movie> findByTitleContainingIgnoreCase(String title, Pageable pageable);
     @Modifying

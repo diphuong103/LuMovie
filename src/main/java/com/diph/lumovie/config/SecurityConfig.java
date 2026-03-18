@@ -16,21 +16,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration @EnableWebSecurity @EnableMethodSecurity @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JwtAuthFilter jwtAuthFilter;
+    private final JwtAuthFilter jwtAuthFilter;  // Lấy token từ header sau đó nếu hợp lệ thì đăng nhập user
+
+    // Các trang public không cần login vẫn cho xem phim
     private static final String[] PUBLIC = {
             "/", "/index",
             "/error",
-            "/dev/**",
-            "/css/**", "/js/**", "/images/**",
+            "/dev/**", // thư mục dev
+            "/css/**", "/js/**", "/images/**",  // cho phép load
             "/api/auth/**","/api/movies/**","/api/genres/**","/api/search/**",
-        "/swagger-ui/**","/v3/api-docs/**","/actuator/**"
+        "/swagger-ui/**","/v3/api-docs/**","/actuator/**"  //swagger-ui (giao diện web hiển thị danh sách API và cho phép test trực tiếp).
     };
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.csrf(c -> c.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
-                .requestMatchers(PUBLIC).permitAll()
+                .requestMatchers(PUBLIC).permitAll() //(cho phép mọi người truy cập, không cần đăng nhập)
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
@@ -39,3 +41,5 @@ public class SecurityConfig {
     @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
     @Bean public AuthenticationManager authenticationManager(AuthenticationConfiguration c) throws Exception { return c.getAuthenticationManager(); }
 }
+
+//SecurityConfig là class trung tâm cấu hình Spring Security để kiểm soát đăng nhập, xác thực JWT và phân quyền truy cập các API trong hệ thống.

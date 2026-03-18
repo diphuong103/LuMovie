@@ -58,6 +58,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MovieResponse> getTrending() {
         return movieRepository.findTop10ByOrderByViewCountDesc()
                 .stream()
@@ -67,6 +68,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MovieResponse> getTopRated() {
         return movieRepository.findTop10ByOrderByAvgRatingDesc()
                 .stream()
@@ -76,6 +78,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<MovieResponse> getLatest() {
         return movieRepository.findTop10ByOrderByCreatedAtDesc()
                 .stream()
@@ -129,10 +132,15 @@ public class MovieServiceImpl implements MovieService {
     public void incrementView(Long id) { movieRepository.incrementViewCount(id); }
 
     @Override
-    public Movie getFeatured() {
+    @Transactional(readOnly = true)
+    public MovieResponse getFeatured() {
         return movieRepository.findTop10ByOrderByViewCountDesc()
-                .stream().findFirst().orElse(null);
+                .stream()
+                .findFirst()
+                .map(movieMapper::toResponse)
+                .orElse(null);
     }
+
 
     @Override
     public List<Genre> getAllGenres() {

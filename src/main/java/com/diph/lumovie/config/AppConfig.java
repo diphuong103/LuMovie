@@ -28,3 +28,4 @@ public class AppConfig {
                 .configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
     }
 }
+//AppConfig là class cấu hình chung giúp ứng dụng Spring Boot giao tiếp với API bên ngoài và xử lý dữ liệu JSON một cách ổn định và linh hoạt.
