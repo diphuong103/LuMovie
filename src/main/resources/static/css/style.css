@@ -636,3 +636,356 @@ textarea.form-input{resize:vertical;min-height:100px;}
 .mb-24{margin-bottom:24px;}
 .w-full{width:100%;}
 .hidden{display:none!important;}
+
+
+/* ══════════════════════════════════════════════
+   FIX: MOVIE CARD — Kích thước cố định đồng đều
+   Thêm vào cuối file lumovie-global.css
+   hoặc replace đoạn .movie-card / .movie-poster cũ
+══════════════════════════════════════════════ */
+
+/* Grid: các ô cùng chiều cao */
+.movie-grid > div,
+.movie-grid-5 > div,
+.movie-grid-4 > div {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card kéo dài full chiều cao ô grid */
+.movie-card {
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg3);
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.movie-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(200,146,42,0.3);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(200,146,42,0.12);
+}
+
+/* Poster: tỉ lệ 2:3 cố định, KHÔNG bị méo dù ảnh bất kỳ kích thước nào */
+.movie-poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  flex-shrink: 0;
+  background: var(--bg4);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ảnh cover khít khung poster */
+.movie-poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  transition: transform 0.4s;
+}
+
+.movie-card:hover .movie-poster img {
+  transform: scale(1.06);
+}
+
+/* Placeholder đồng đều khi không có poster */
+.poster-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  gap: 10px;
+}
+
+/* Info phần dưới */
+.movie-info {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 60px;
+}
+
+.movie-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s;
+}
+
+.movie-card:hover .movie-title { color: var(--gold2); }
+
+.movie-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  color: var(--text3);
+  margin-top: auto;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   LUMOVIE — Movie Card Fix: Đồng đều kích thước + Responsive
+   Dán vào CUỐI file style.css (ghi đè các rule cũ)
+══════════════════════════════════════════════════════════ */
+
+/* ── MOVIE GRID: responsive breakpoints ── */
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  align-items: start; /* các card không bị kéo dài bất thường */
+}
+
+/* ── Wrapper mỗi ô: flex để card full height ── */
+.movie-grid > div,
+.movie-grid-5 > div,
+.movie-grid-4 > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* tránh overflow chữ dài */
+}
+
+/* ── MOVIE CARD ── */
+.movie-card {
+  position: relative;
+  cursor: pointer;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg3);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  /* KHÔNG dùng height cứng — để aspect-ratio của poster tự quyết định */
+}
+
+.movie-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(200, 146, 42, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6),
+  0 0 0 1px rgba(200, 146, 42, 0.12);
+}
+
+/* ── Link bọc poster: block full width ── */
+.movie-poster-link {
+  display: block;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* ── MOVIE POSTER: tỉ lệ 2:3 cố định ── */
+.movie-poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;     /* ← chìa khóa: mọi poster đều cùng tỉ lệ */
+  position: relative;
+  overflow: hidden;
+  background: var(--bg4);
+  display: block;
+}
+
+/* ── Ảnh poster: cover khít, không méo ── */
+.movie-poster-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;        /* ← crop cho vừa, không stretch */
+  object-position: center top; /* ưu tiên mặt nhân vật ở trên */
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.movie-card:hover .movie-poster-img {
+  transform: scale(1.06);
+}
+
+/* ── Placeholder khi không có ảnh ── */
+.poster-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+}
+
+.poster-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  line-height: 1.4;
+  word-break: break-word;
+  padding: 0 8px;
+}
+
+/* ── Hover overlay ── */
+.movie-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, rgba(0, 0, 0, 0.96) 100%);
+  opacity: 0;
+  transition: opacity 0.25s;
+  display: flex;
+  align-items: flex-end;
+  padding: 14px;
+}
+
+.movie-card:hover .movie-overlay { opacity: 1; }
+
+/* ── MOVIE INFO (phần chữ dưới poster) ── */
+.movie-info {
+  padding: 10px 12px 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 56px;
+}
+
+.movie-title {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s;
+  line-height: 1.3;
+}
+
+.movie-card:hover .movie-title { color: var(--gold2); }
+
+.movie-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--text3);
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.movie-meta span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text3);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   Số cột thay đổi theo màn hình
+═══════════════════════════════════ */
+
+/* Laptop nhỏ / tablet ngang ≤ 1280px → 5 cột */
+@media (max-width: 1280px) {
+  .movie-grid { grid-template-columns: repeat(5, 1fr); }
+  .section, .section { padding: 48px 32px; }
+  .divider { margin: 0 32px; }
+}
+
+/* Tablet đứng ≤ 1024px → 4 cột */
+@media (max-width: 1024px) {
+  .movie-grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .navbar { padding: 0 28px; }
+  .section { padding: 40px 24px; }
+  .divider { margin: 0 24px; }
+  .footer { padding: 40px 24px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+
+  /* Featured banner */
+  [style*="margin:0 48px 60px"] {
+    margin: 0 24px 48px !important;
+    height: 300px !important;
+  }
+}
+
+/* Tablet nhỏ / phablet ≤ 768px → 3 cột */
+@media (max-width: 768px) {
+  .movie-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .nav-links { display: none; }
+  .hero-section { padding: 80px 20px 48px !important; }
+
+  .movie-title { font-size: 0.78rem; }
+  .movie-meta  { font-size: 0.66rem; }
+  .movie-info  { padding: 8px 10px 10px; min-height: 50px; }
+
+  /* Genre grid: 4 cột trên tablet */
+  [style*="grid-template-columns:repeat(7,1fr)"] {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+/* Điện thoại ≤ 480px → 2 cột */
+@media (max-width: 480px) {
+  .movie-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+  .section { padding: 32px 16px; }
+  .divider { margin: 0 16px; }
+  .navbar  { padding: 0 16px; }
+  .footer  { padding: 32px 16px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+
+  .movie-badge { font-size: 0.54rem; padding: 2px 6px; }
+  .movie-rating { font-size: 0.62rem; padding: 2px 5px; }
+  .movie-title  { font-size: 0.75rem; }
+  .movie-info   { padding: 7px 8px 9px; }
+
+  /* Hero search */
+  .search-bar { padding: 5px 5px 5px 16px; }
+
+  /* Genre grid: 3 cột trên mobile */
+  [style*="grid-template-columns:repeat(7,1fr)"] {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* Featured banner */
+  [style*="margin:0 48px 60px"] {
+    margin: 0 16px 36px !important;
+    height: 240px !important;
+  }
+  [style*="padding:40px 48px"] {
+    padding: 20px !important;
+  }
+}
+
+/* Điện thoại rất nhỏ ≤ 360px → vẫn 2 cột */
+@media (max-width: 360px) {
+  .movie-grid { gap: 8px; }
+  .nav-logo   { font-size: 1.5rem; letter-spacing: 3px; }
+}

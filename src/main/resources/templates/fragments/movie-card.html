@@ -1,42 +1,57 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
-<!-- ═══════════════════════════════════════════════
-     FRAGMENT: movie-card
-     Usage: <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
-════════════════════════════════════════════════════ -->
+<!--
+  FRAGMENT: movie-card
+  Usage: <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+-->
 <div th:fragment="card(movie)" class="movie-card" th:if="${movie != null}">
-  <a th:href="@{/movies/{slug}(slug=${movie.slug})}">
+
+  <a th:href="@{/movies/{slug}(slug=${movie.slug})}" class="movie-poster-link">
     <div class="movie-poster">
-      <!-- Poster image -->
+
+      <!-- Poster image — object-fit:cover giữ tỉ lệ, không méo -->
       <img th:if="${movie.posterUrl != null}"
            th:src="${movie.posterUrl}"
            th:alt="${movie.title}"
-           loading="lazy"/>
-      <!-- Placeholder if no poster -->
-      <div th:unless="${movie.posterUrl != null}" class="poster-placeholder"
-           th:style="'background:linear-gradient(135deg,' + ${movie.gradientFrom ?: '#1a0a2e'} + ',' + ${movie.gradientTo ?: '#0a1a2e'} + ')'">
-        🎬
+           loading="lazy"
+           class="movie-poster-img"/>
+
+      <!-- Placeholder khi không có poster -->
+      <div th:unless="${movie.posterUrl != null}"
+           class="poster-placeholder"
+           style="background:linear-gradient(135deg,#1a0a2e,#0a1a2e)">
+        <span style="font-size:2.2rem">🎬</span>
         <div class="poster-label" th:text="${movie.title}">Movie Title</div>
       </div>
 
-      <!-- Badge -->
-      <div th:if="${movie.isNew}" class="movie-badge badge-new">✨ Mới</div>
-      <div th:if="${movie.viewCount > 100000 and !movie.isNew}" class="movie-badge badge-hot">🔥 Hot</div>
-      <div th:if="${movie.type == 'SERIES' or movie.type == 'ANIME'}"
+      <!-- Badges — chỉ hiện 1 tại một thời điểm -->
+      <div th:if="${movie.new}"
+           class="movie-badge badge-new">✨ Mới</div>
+
+      <div th:if="${!movie.new and movie.hot}"
+           class="movie-badge badge-hot">🔥 Hot</div>
+
+      <div th:if="${movie.type != null
+                   and (movie.type.name() == 'SERIES' or movie.type.name() == 'ANIME')
+                   and movie.totalEpisodes > 0}"
            class="movie-badge badge-ep"
            th:text="'Tập ' + ${movie.totalEpisodes}">Tập 12</div>
 
       <!-- Rating -->
       <div class="movie-rating">
-        ⭐ <span th:text="${#numbers.formatDecimal(movie.avgRating, 1, 1)}">8.5</span>
+        ⭐
+        <span th:text="${movie.avgRating != null}
+                        ? ${#numbers.formatDecimal(movie.avgRating, 1, 1)}
+                        : '—'">8.5</span>
       </div>
 
       <!-- Hover overlay -->
       <div class="movie-overlay">
         <div class="play-btn">▶</div>
       </div>
-    </div>
+
+    </div><!-- end movie-poster -->
   </a>
 
   <div class="movie-info">
@@ -44,10 +59,11 @@
       <div class="movie-title" th:text="${movie.title}">Movie Title</div>
     </a>
     <div class="movie-meta">
-      <span th:text="${movie.releaseYear}">2024</span>
+      <span th:text="${movie.releaseYear != null ? movie.releaseYear : '—'}">2024</span>
       <span class="meta-dot"></span>
-      <span th:text="${movie.genres != null and !#lists.isEmpty(movie.genres) ? movie.genres[0].name : 'Phim'}">Hành Động</span>
+      <span th:text="${movie.firstGenreName}">Hành Động</span>
     </div>
   </div>
+
 </div>
 </html>

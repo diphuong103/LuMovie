@@ -124,10 +124,16 @@
       <div class="section-title">🔥 Đang Thịnh Hành</div>
       <a th:href="@{/movies(sort='trending')}" class="section-more">Xem tất cả →</a>
     </div>
-    <div class="movie-grid">
-      <div th:each="movie : ${trendingMovies}"
-           th:replace="~{fragments/movie-card :: card(movie=${movie})}">
+    <!-- Neu' co phim -->
+    <div class="movie-grid"
+         th:if="${trendingMovies != null and !#lists.isEmpty(trendingMovies)}">
+      <div th:each="movies : ${trendingMovies}">
+        <div th:replace="~{fragments/movie-card :: card(movie = ${movies})}"></div>
       </div>
+    </div>
+    <!-- Nếu chưa có phim -->
+    <div th:if="${trendingMovies == null or #lists.isEmpty(trendingMovies)}">
+      <p style="opacity:.7">Chưa có phim nào</p>
     </div>
   </section>
 
@@ -181,13 +187,6 @@
   <section class="section">
     <div class="section-header">
       <div class="section-title">✨ Mới Cập Nhật</div>
-<!--      <a th:href="@{/movies?sort='latest'}" class="section-more">Xem tất cả →</a>-->
-<!--    </div>-->
-<!--    <div class="movie-grid">-->
-<!--      <div th:each="movie : ${latestMovies}"-->
-<!--           th:replace="~{fragments/movie-card :: card(movie=${movie})}">-->
-<!--      </div>-->
-<!--    </div>-->
       <a th:href="@{/movies?sort='latest'}" class="section-more">Xem tất cả →</a>
     </div>
     <!-- Neu' co phim -->
