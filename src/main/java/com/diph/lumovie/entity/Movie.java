@@ -5,6 +5,7 @@ import com.diph.lumovie.enums.MovieType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
+import org.hibernate.annotations.BatchSize;
 
 @Entity @Table(name = "movies")
 @Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
@@ -32,6 +33,7 @@ public class Movie extends BaseEntity {
     @JoinTable(name = "movie_genres",
         joinColumns = @JoinColumn(name = "movie_id"),
         inverseJoinColumns = @JoinColumn(name = "genre_id"))
+    @BatchSize(size = 20)
     private List<Genre> genres;
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL) private List<Episode> episodes;
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL) private List<Rating> ratings;

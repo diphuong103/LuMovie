@@ -14,89 +14,88 @@
 
 <div class="page-wrapper">
 
-  <!-- ── HERO BANNER ── -->
-  <div class="detail-hero" style="
-    position:relative;min-height:520px;
-    display:flex;align-items:flex-end;
-    overflow:hidden;margin-bottom:0;">
+  <!-- ══════════════════════════════════
+       HERO BANNER
+  ═══════════════════════════════════ -->
+  <div class="detail-hero">
 
-    <!-- Banner / Poster bg -->
-    <div style="position:absolute;inset:0">
-      <img th:if="${movie.bannerUrl != null}" th:src="${movie.bannerUrl}"
-           style="width:100%;height:100%;object-fit:cover;opacity:0.35"/>
-      <div th:unless="${movie.bannerUrl != null}" style="
-        width:100%;height:100%;
-        background:linear-gradient(135deg,#1a0a2e 0%,#0a1a2e 50%,#1a1a0a 100%);
-        display:flex;align-items:center;justify-content:center;font-size:8rem;opacity:0.2">🎬</div>
+    <!-- Background image / placeholder -->
+    <div class="detail-hero__bg">
+      <img th:if="${movie.backdropUrl != null}"
+           th:src="${movie.backdropUrl}" th:alt="${movie.title}"/>
+      <div th:unless="${movie.backdropUrl != null}"
+           class="detail-hero__bg-placeholder">🎬</div>
     </div>
 
-    <!-- Gradients -->
-    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,10,14,0.5) 0%,rgba(10,10,14,0.98) 85%)"></div>
-    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(10,10,14,0.95) 0%,transparent 60%)"></div>
+    <!-- Gradient overlays -->
+    <div class="detail-hero__grad-v"></div>
+    <div class="detail-hero__grad-h"></div>
 
-    <!-- Content -->
-    <div style="position:relative;z-index:1;padding:60px 48px;display:flex;gap:40px;align-items:flex-end;width:100%">
+    <!-- Content row -->
+    <div class="detail-hero__content">
 
       <!-- Poster -->
-      <div style="flex-shrink:0;width:200px;border-radius:12px;overflow:hidden;border:2px solid rgba(200,146,42,0.3);box-shadow:0 16px 48px rgba(0,0,0,0.7)">
-        <img th:if="${movie.posterUrl != null}" th:src="${movie.posterUrl}" th:alt="${movie.title}" style="width:100%;display:block"/>
-        <div th:unless="${movie.posterUrl != null}" style="width:200px;height:300px;background:linear-gradient(135deg,#1a0a2e,#0a1a2e);display:flex;align-items:center;justify-content:center;font-size:4rem">🎬</div>
+      <div class="detail-poster">
+        <img th:if="${movie.backdropUrl != null}"
+             th:src="${movie.backdropUrl}" th:alt="${movie.title}"/>
+        <div th:unless="${movie.backdropUrl != null}"
+             class="detail-poster__placeholder">🎬</div>
       </div>
 
       <!-- Info -->
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-          <span class="badge badge-gold">⭐ <span th:text="${#numbers.formatDecimal(movie.avgRating,1,1)}">8.5</span></span>
-          <span th:if="${movie.type == 'MOVIE'}" class="badge badge-purple">🎥 Phim Lẻ</span>
-          <span th:if="${movie.type == 'SERIES'}" class="badge badge-purple">📺 Phim Bộ</span>
-          <span th:if="${movie.type == 'ANIME'}" class="badge badge-purple">🎌 Anime</span>
-          <span th:if="${movie.status == 'ONGOING'}" class="badge badge-green">🔄 Đang Chiếu</span>
-          <span th:if="${movie.status == 'COMPLETED'}" class="badge" style="background:rgba(40,216,120,0.12);border:1px solid rgba(40,216,120,0.3);color:#28d878">✅ Hoàn Thành</span>
+      <div class="detail-info">
+
+        <!-- Badges row -->
+        <div class="detail-badges">
+          <span class="badge badge-gold">
+            ⭐ <span th:text="${#numbers.formatDecimal(movie.avgRating,1,1)}">8.5</span>
+          </span>
+          <span th:if="${movie.type != null and movie.type.name() == 'MOVIE'}"  class="badge badge-purple">🎥 Phim Lẻ</span>
+          <span th:if="${movie.type != null and movie.type.name() == 'SERIES'}" class="badge badge-purple">📺 Phim Bộ</span>
+          <span th:if="${movie.type != null and movie.type.name() == 'ANIME'}"  class="badge badge-purple">🎌 Anime</span>
+          <span th:if="${movie.status != null and movie.status.name() == 'ONGOING'}"   class="badge badge-green">Đang Chiếu</span>
+          <span th:if="${movie.status != null and movie.status.name() == 'COMPLETED'}" class="badge badge-green">Hoàn Thành</span>
         </div>
 
-        <h1 style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:4px;line-height:1;margin-bottom:8px;
-                   background:linear-gradient(135deg,#f5d280,#e8b84b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text"
-            th:text="${movie.title}">Tên Phim</h1>
+        <!-- Title -->
+        <h1 class="detail-title" th:text="${movie.title}">Tên Phim</h1>
+        <p  class="detail-original-title" th:text="${movie.originalTitle}">Original Title</p>
 
-        <p style="font-size:1rem;color:#605848;margin-bottom:16px;font-style:italic"
-           th:text="${movie.originalTitle}">Original Title</p>
-
-        <!-- Meta info -->
-        <div style="display:flex;gap:24px;margin-bottom:20px;flex-wrap:wrap">
-          <div style="font-size:0.83rem">
-            <span style="color:#605848">Năm: </span>
-            <span style="color:#a09880" th:text="${movie.releaseYear}">2024</span>
+        <!-- Meta pills -->
+        <div class="detail-meta">
+          <div class="detail-meta__item">
+            <span class="detail-meta__label">Năm</span>
+            <span class="detail-meta__value" th:text="${movie.releaseYear}">2024</span>
           </div>
-          <div th:if="${movie.duration != null}" style="font-size:0.83rem">
-            <span style="color:#605848">Thời lượng: </span>
-            <span style="color:#a09880" th:text="${movie.duration} + ' phút'">120 phút</span>
+          <div th:if="${movie.duration != null}" class="detail-meta__item">
+            <span class="detail-meta__label">Thời lượng</span>
+            <span class="detail-meta__value" th:text="${movie.duration} + ' phút'">120 phút</span>
           </div>
-          <div th:if="${movie.country != null}" style="font-size:0.83rem">
-            <span style="color:#605848">Quốc gia: </span>
-            <span style="color:#a09880" th:text="${movie.country}">Mỹ</span>
+          <div th:if="${movie.country != null}" class="detail-meta__item">
+            <span class="detail-meta__label">Quốc gia</span>
+            <span class="detail-meta__value" th:text="${movie.country}">Mỹ</span>
           </div>
-          <div style="font-size:0.83rem">
-            <span style="color:#605848">Lượt xem: </span>
-            <span style="color:#a09880" th:text="${#numbers.formatInteger(movie.viewCount, 1, 'COMMA')}">1,234</span>
+          <div class="detail-meta__item">
+            <span class="detail-meta__label">Lượt xem</span>
+            <span class="detail-meta__value"
+                  th:text="${#numbers.formatInteger(movie.viewCount, 1, 'COMMA')}">1,234</span>
           </div>
         </div>
 
         <!-- Genres -->
-        <div style="display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap">
-          <a th:each="genre,stat : ${movie.genres}"
+        <div class="detail-genres">
+          <a th:each="genre : ${movie.genres}"
              th:href="@{/movies(genre=${genre.slug})}"
-             th:class="'genre-pill gp-' + ${(stat.index % 7) + 1}"
-             style="padding:6px 14px;font-size:0.75rem"
+             class="detail-genre-tag"
              th:text="${genre.name}">Thể loại</a>
         </div>
 
         <!-- Actions -->
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-          <!-- Watch button -->
+        <div class="detail-actions">
           <a th:href="@{/movies/{slug}/watch(slug=${movie.slug})}"
              class="btn btn-gold btn-lg">▶ Xem Phim</a>
 
-          <!-- Watchlist toggle (authenticated) -->
+          <!-- Watchlist (đăng nhập) -->
           <div sec:authorize="isAuthenticated()">
             <form th:action="@{/watchlist/toggle}" method="post">
               <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
@@ -106,188 +105,203 @@
             </form>
           </div>
 
-          <!-- Share -->
           <button class="btn btn-ghost btn-lg" onclick="shareMovie()">📤 Chia Sẻ</button>
         </div>
+
+      </div><!-- /detail-info -->
+    </div><!-- /detail-hero__content -->
+  </div><!-- /detail-hero -->
+
+  <!-- ══════════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════════ -->
+  <div class="detail-body">
+
+    <!-- ── LEFT COLUMN ── -->
+    <div class="detail-left">
+
+      <!-- Nội dung phim -->
+      <div class="card">
+        <div class="card-heading">📖 Nội Dung Phim</div>
+        <p class="detail-description" th:text="${movie.description}">Nội dung phim...</p>
       </div>
-    </div>
-  </div>
 
-  <!-- ── MAIN CONTENT ── -->
-  <div style="padding:40px 48px;display:grid;grid-template-columns:1fr 340px;gap:40px">
-
-    <!-- LEFT COLUMN -->
-    <div>
-
-      <!-- Description -->
-      <div class="card" style="margin-bottom:28px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">📖 Nội Dung Phim</div>
-        <p style="font-family:'Crimson Pro',serif;font-size:1rem;line-height:1.75;color:#a09880;font-style:italic"
-           th:text="${movie.description}">Nội dung phim...</p>
-      </div>
-
-      <!-- Episode list (for series/anime) -->
-      <div th:if="${movie.type != 'MOVIE' and !movie.episodes.empty}" class="card" style="margin-bottom:28px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:16px">
+      <!-- Danh sách tập (series / anime) -->
+      <div th:if="${(movie.type == null or movie.type.name() != 'MOVIE') and not #lists.isEmpty(movie.episodes)}" class="card">
+        <div class="card-heading">
           📺 Danh Sách Tập
-          <span style="font-size:0.8rem;color:#605848;font-family:'DM Sans',sans-serif;font-weight:400;margin-left:8px"
-                th:text="${movie.episodes.size()} + ' tập'">12 tập</span>
+          <span class="count" th:text="${movie.episodes.size()} + ' tập'">12 tập</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:8px">
+        <div class="episode-grid">
           <a th:each="episode : ${movie.episodes}"
              th:href="@{/movies/{slug}/watch(slug=${movie.slug}, ep=${episode.episodeNumber})}"
              th:text="${episode.episodeNumber}"
-             style="
-               aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-               border-radius:8px;font-size:0.85rem;font-weight:500;
-               background:#1a1a22;border:1px solid rgba(200,146,42,0.15);
-               color:#a09880;transition:all 0.2s;text-decoration:none;"
-             onmouseover="this.style.background='rgba(200,146,42,0.15)';this.style.borderColor='rgba(200,146,42,0.4)';this.style.color='#e8b84b'"
-             onmouseout="this.style.background='#1a1a22';this.style.borderColor='rgba(200,146,42,0.15)';this.style.color='#a09880'">1</a>
+             class="episode-btn">1</a>
         </div>
       </div>
 
-      <!-- Rating section -->
-      <div class="card" style="margin-bottom:28px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:16px">⭐ Đánh Giá</div>
+      <!-- Đánh giá -->
+      <div class="card" id="rating">
+        <div class="card-heading">⭐ Đánh Giá</div>
 
-        <!-- Rating stats -->
-        <div style="display:flex;align-items:center;gap:32px;margin-bottom:20px">
-          <div style="text-align:center">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:4rem;color:#e8b84b;line-height:1"
+        <!-- Tổng quan rating -->
+        <div class="rating-display">
+          <div>
+            <div class="rating-big-num"
                  th:text="${#numbers.formatDecimal(movie.avgRating,1,1)}">8.5</div>
-            <div class="stars" style="justify-content:center;margin:6px 0">
+            <div class="rating-stars-row">
               <span th:each="i : ${#numbers.sequence(1,5)}"
                     th:text="${i <= movie.avgRating ? '★' : '☆'}"
-                    th:style="${i <= movie.avgRating ? 'color:#e8b84b' : 'color:#202028'}">★</span>
+                    th:style="${i <= movie.avgRating ? 'color:var(--gold2)' : 'color:var(--bg5)'}">★</span>
             </div>
-            <div style="font-size:0.75rem;color:#605848" th:text="${movie.ratingCount} + ' đánh giá'">0 đánh giá</div>
+            <div class="rating-count"
+                 th:text="${ratingCount} + ' đánh giá'">0 đánh giá</div>
           </div>
         </div>
 
-        <!-- Rate this movie (authenticated) -->
-        <div sec:authorize="isAuthenticated()" style="border-top:1px solid rgba(200,146,42,0.1);padding-top:16px">
-          <p style="font-size:0.83rem;color:#605848;margin-bottom:10px">Đánh giá của bạn:</p>
-          <form th:action="@{/movies/{id}/rate(id=${movie.id})}" method="post" style="display:flex;align-items:center;gap:12px">
+        <!-- Form đánh giá — đã đăng nhập -->
+        <div sec:authorize="isAuthenticated()">
+          <p class="rating-prompt">Đánh giá của bạn:</p>
+          <form th:action="@{/movies/{id}/rate(id=${movie.id})}" method="post"
+                class="rating-form">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <div class="star-rating" style="display:flex;gap:4px">
-              <input th:each="i : ${#numbers.sequence(1,5)}" type="radio" name="rating" th:value="${i}"
-                     th:id="'star' + ${i}" th:checked="${userRating == i}" style="display:none"/>
-              <label th:each="i : ${#numbers.sequence(5,1,-1)}" th:for="'star' + ${i}"
-                     style="font-size:1.6rem;cursor:pointer;color:#202028;transition:color 0.15s"
-                     onmouseover="highlightStars(this)" onmouseout="resetStars()"
-                     th:text="'★'">★</label>
+            <div class="star-rating">
+              <th:block th:each="i : ${#numbers.sequence(5,1,-1)}">
+                <input type="radio" name="rating" th:value="${i}"
+                       th:id="'star' + ${i}" th:checked="${userRating == i}"
+                       style="display:none"/>
+                <label th:for="'star' + ${i}">★</label>
+              </th:block>
             </div>
             <button type="submit" class="btn btn-outline btn-sm">Gửi Đánh Giá</button>
           </form>
         </div>
-        <div sec:authorize="isAnonymous()" style="border-top:1px solid rgba(200,146,42,0.1);padding-top:16px">
-          <a th:href="@{/auth/login}" style="font-size:0.83rem;color:#605848">
-            <a th:href="@{/auth/login}" style="color:#e8b84b">Đăng nhập</a> để đánh giá phim này
-          </a>
+
+        <!-- CTA đăng nhập -->
+        <div sec:authorize="isAnonymous()" class="rating-login-cta">
+          <a th:href="@{/auth/login}" style="color:var(--gold2)">Đăng nhập</a>
+          để đánh giá phim này
         </div>
       </div>
 
-      <!-- Comments -->
-      <div class="card">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:16px">
+      <!-- Bình luận -->
+      <div class="card" id="comments">
+        <div class="card-heading">
           💬 Bình Luận
-          <span style="font-size:0.8rem;color:#605848;font-family:'DM Sans',sans-serif;font-weight:400;margin-left:8px"
-                th:text="'(' + ${movie.comments.size()} + ')'"></span>
+          <span class="count" th:text="'(' + ${#lists.size(comments)} + ')'"></span>
         </div>
 
-        <!-- Comment form -->
-        <div sec:authorize="isAuthenticated()" style="margin-bottom:20px">
+        <!-- Form bình luận — đã đăng nhập -->
+        <div sec:authorize="isAuthenticated()" class="comment-form-wrap">
           <form th:action="@{/movies/{id}/comment(id=${movie.id})}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <textarea name="content" class="form-input" placeholder="Viết bình luận của bạn..." rows="3" style="resize:none;margin-bottom:10px"></textarea>
+            <textarea name="content" class="form-input"
+                      placeholder="Viết bình luận của bạn..." rows="3"></textarea>
             <button type="submit" class="btn btn-gold btn-sm">📤 Gửi Bình Luận</button>
           </form>
         </div>
-        <div sec:authorize="isAnonymous()" style="margin-bottom:20px;padding:16px;background:#141419;border-radius:10px;text-align:center">
-          <a th:href="@{/auth/login}" style="color:#e8b84b">Đăng nhập</a>
-          <span style="font-size:0.85rem;color:#605848"> để viết bình luận</span>
+
+        <!-- CTA đăng nhập -->
+        <div sec:authorize="isAnonymous()" class="comment-login-cta">
+          <a th:href="@{/auth/login}" style="color:var(--gold2)">Đăng nhập</a>
+          để viết bình luận
         </div>
 
-        <!-- Comment list -->
-        <div th:if="${movie.comments.empty}" style="text-align:center;padding:32px 0;color:#605848;font-size:0.85rem">
+        <!-- Danh sách bình luận -->
+        <div th:if="${#lists.isEmpty(comments)}" class="comment-empty">
           Chưa có bình luận nào. Hãy là người đầu tiên! 💬
         </div>
-        <div th:each="comment : ${movie.comments}" class="comment-item">
-          <div class="comment-avatar" th:text="${#strings.substring(comment.user.username,0,1).toUpperCase()}">U</div>
-          <div style="flex:1">
-            <div style="display:flex;align-items:baseline;gap:10px">
+
+        <div th:each="comment : ${comments}" class="comment-item">
+          <div class="comment-avatar"
+               th:text="${#strings.substring(comment.user.username,0,1).toUpperCase()}">U</div>
+          <div class="comment-body">
+            <div class="comment-header">
               <span class="comment-name" th:text="${comment.user.username}">Username</span>
-              <span class="comment-time" th:text="${#temporals.format(comment.createdAt,'dd/MM/yyyy')}">01/01/2024</span>
+              <span class="comment-time"
+                    th:text="${#temporals.format(comment.createdAt,'dd/MM/yyyy')}">01/01/2024</span>
             </div>
             <p class="comment-text" th:text="${comment.content}">Nội dung bình luận</p>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- RIGHT COLUMN -->
-    <aside>
-      <!-- Movie info card -->
-      <div class="card" style="margin-bottom:20px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">Thông Tin Phim</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div th:if="${movie.director != null}" style="display:flex;justify-content:space-between;font-size:0.83rem">
-            <span style="color:#605848">Đạo diễn</span>
-            <span style="color:#a09880;text-align:right" th:text="${movie.director}">Tên đạo diễn</span>
+      </div><!-- /comments card -->
+    </div><!-- /detail-left -->
+
+    <!-- ── RIGHT SIDEBAR ── -->
+    <aside class="detail-aside">
+
+      <!-- Thông tin phim -->
+      <div class="card">
+        <div class="card-heading">Thông Tin Phim</div>
+        <div class="info-table">
+
+          <div th:if="${movie.director != null}" class="info-row">
+            <span class="info-row__label">Đạo diễn</span>
+            <span class="info-row__value" th:text="${movie.director}">Tên đạo diễn</span>
           </div>
-          <div th:if="${movie.cast != null}" style="display:flex;justify-content:space-between;font-size:0.83rem">
-            <span style="color:#605848">Diễn viên</span>
-            <span style="color:#a09880;text-align:right;max-width:180px" th:text="${movie.cast}">Tên diễn viên</span>
+
+          <div th:if="${movie.actors != null}" class="info-row">
+            <span class="info-row__label">Diễn viên</span>
+            <span class="info-row__value" th:text="${movie.actors}">Tên diễn viên</span>
           </div>
-          <div th:if="${movie.language != null}" style="display:flex;justify-content:space-between;font-size:0.83rem">
-            <span style="color:#605848">Ngôn ngữ</span>
-            <span style="color:#a09880" th:text="${movie.language}">Tiếng Anh</span>
+
+          <div th:if="${movie.language != null}" class="info-row">
+            <span class="info-row__label">Ngôn ngữ</span>
+            <span class="info-row__value" th:text="${movie.language}">Tiếng Anh</span>
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:0.83rem">
-            <span style="color:#605848">Trạng thái</span>
-            <span style="color:#28d878" th:if="${movie.status == 'COMPLETED'}">✅ Hoàn Thành</span>
-            <span style="color:#e8b84b" th:if="${movie.status == 'ONGOING'}">🔄 Đang Chiếu</span>
+
+          <div class="info-row">
+            <span class="info-row__label">Trạng thái</span>
+            <span th:if="${movie.status != null and movie.status.name() == 'COMPLETED'}"
+                  class="info-row__value info-status-done">✅ Hoàn Thành</span>
+            <span th:if="${movie.status != null and movie.status.name() == 'ONGOING'}"
+                  class="info-row__value info-status-ongoing">🔄 Đang Chiếu</span>
           </div>
+
         </div>
       </div>
 
-      <!-- Related movies -->
+      <!-- Phim liên quan -->
       <div class="card">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">Phim Liên Quan</div>
-        <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card-heading">Phim Liên Quan</div>
+        <div class="related-list">
           <a th:each="related : ${relatedMovies}"
              th:href="@{/movies/{slug}(slug=${related.slug})}"
-             style="display:flex;gap:12px;align-items:center;text-decoration:none;transition:opacity 0.2s"
-             onmouseover="this.style.opacity='0.75'" onmouseout="this.style.opacity='1'">
-            <div style="width:52px;height:78px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#1a1a22">
-              <img th:if="${related.posterUrl != null}" th:src="${related.posterUrl}" style="width:100%;height:100%;object-fit:cover"/>
-              <div th:unless="${related.posterUrl != null}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.2rem">🎬</div>
+             class="related-item">
+            <div class="related-thumb">
+              <img th:if="${related.posterUrl != null}"
+                   th:src="${related.posterUrl}" th:alt="${related.title}"/>
+              <div th:unless="${related.posterUrl != null}"
+                   class="related-thumb__placeholder">🎬</div>
             </div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:0.82rem;font-weight:600;color:#e8e0d0;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" th:text="${related.title}">Phim liên quan</div>
-              <div style="font-size:0.72rem;color:#605848" th:text="${related.releaseYear}">2024</div>
-              <div style="font-size:0.7rem;color:#e8b84b;margin-top:2px" th:text="'⭐ ' + ${#numbers.formatDecimal(related.avgRating,1,1)}">⭐ 8.0</div>
+            <div class="related-meta">
+              <div class="related-title" th:text="${related.title}">Phim liên quan</div>
+              <div class="related-year"  th:text="${related.releaseYear}">2024</div>
+              <div class="related-rating"
+                   th:text="'⭐ ' + ${#numbers.formatDecimal(related.avgRating,1,1)}">⭐ 8.0</div>
             </div>
           </a>
         </div>
       </div>
-    </aside>
-  </div>
-</div>
+
+    </aside><!-- /detail-aside -->
+  </div><!-- /detail-body -->
+
+</div><!-- /page-wrapper -->
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 
 <script th:src="@{/js/main.js}"></script>
 <script>
-function shareMovie() {
-  if (navigator.share) {
-    navigator.share({ title: document.title, url: window.location.href });
-  } else {
-    navigator.clipboard.writeText(window.location.href);
-    alert('Đã copy link phim!');
+  function shareMovie() {
+    if (navigator.share) {
+      navigator.share({ title: document.title, url: window.location.href });
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+              .then(() => alert('Đã copy link phim!'));
+    }
   }
-}
 </script>
 </body>
 </html>

@@ -15,6 +15,7 @@ public interface MovieService {
     List<MovieResponse> getTrending();
     List<MovieResponse> getTopRated();
     List<MovieResponse> getLatest();
+    List<MovieResponse> getRelated(Long movieId, int limit);
     MovieResponse create(CreateMovieRequest request);
     MovieResponse update(Long id, CreateMovieRequest request);
     void delete(Long id);

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -35,5 +36,25 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     @Modifying
     @Query("UPDATE Movie m SET m.viewCount = m.viewCount + 1 WHERE m.id = :id")
     void incrementViewCount(Long id);
+
+    @Query("""
+    SELECT DISTINCT m FROM Movie m JOIN m.genres g
+    WHERE g IN (SELECT g2 FROM Movie m2 JOIN m2.genres g2 WHERE m2.id = :movieId)
+    AND m.id != :movieId
+    ORDER BY m.viewCount DESC
+    """)
+    List<Movie> findRelated(@Param("movieId") Long movieId, Pageable pageable);
+
+    @Query("""
+    SELECT DISTINCT m FROM Movie m
+    LEFT JOIN FETCH m.genres
+    WHERE m.id IN (
+        SELECT m2.id FROM Movie m2
+        ORDER BY m2.viewCount DESC
+        LIMIT 6
+    )
+    ORDER BY m.viewCount DESC
+    """)
+    List<Movie> findTop6TrendingWithGenres();
 
 }

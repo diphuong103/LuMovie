@@ -21,6 +21,8 @@ public class SecurityConfig {
     // Các trang public không cần login vẫn cho xem phim
     private static final String[] PUBLIC = {
             "/", "/index",
+            "/movies/**",
+            "/genres/**",
             "/error",
             "/dev/**", // thư mục dev
             "/css/**", "/js/**", "/images/**",  // cho phép load

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Transactional(readOnly = true)
 @Service @RequiredArgsConstructor
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
@@ -35,6 +36,7 @@ public class MovieServiceImpl implements MovieService {
         return movieMapper.toResponse(movieRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Movie not found: " + id)));
     }
+
 
     @Override
     public MovieResponse getBySlug(String slug) {
@@ -86,6 +88,17 @@ public class MovieServiceImpl implements MovieService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
+
+
+    @Override
+    public List<MovieResponse> getRelated(Long movieId, int limit) {
+        return movieRepository
+                .findRelated(movieId, PageRequest.of(0, limit))
+                .stream()
+                .map(movieMapper::toResponse)
+                .toList();
+    }
+
     @Override @Transactional
     public MovieResponse create(CreateMovieRequest request) {
         Movie movie = Movie.builder()
