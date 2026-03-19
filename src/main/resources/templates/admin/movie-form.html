@@ -180,7 +180,7 @@
                   <label th:each="genre : ${allGenres}"
                          style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0">
                     <input type="checkbox" name="genreIds" th:value="${genre.id}"
-                           th:checked="${movie != null and movie.genres != null and #lists.contains(movie.genres.![id], genre.id)}"
+                           th:checked="${movie != null && movie.genres != null && movie.genres.?[id == __${genre.id}__].size() > 0}"
                            style="width:15px;height:15px;accent-color:#e8b84b"/>
                     <span style="font-size:0.83rem;color:#a09880" th:text="${genre.name}">Thể loại</span>
                   </label>

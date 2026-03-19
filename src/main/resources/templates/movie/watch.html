@@ -4,173 +4,286 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title th:text="'Xem: ' + ${movie.title} + ' — LuMovie'">Xem Phim — LuMovie</title>
+  <title th:text="${movie.title} + ' — LuMovie'">Xem Phim</title>
   <link rel="stylesheet" th:href="@{/css/style.css}"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#000;font-family:'DM Sans',sans-serif}
+
+    /* ══ PLAYER ══ */
+    .lm-player-wrap{position:relative;width:100%;background:#000;aspect-ratio:16/9;max-height:78vh;overflow:hidden;user-select:none}
+    .lm-player-wrap video{width:100%;height:100%;display:block;background:#000}
+    .lm-overlay{position:absolute;inset:0;cursor:pointer;z-index:5}
+    .lm-spinner{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:20;background:rgba(0,0,0,0.4)}
+    .lm-spinner-ring{width:48px;height:48px;border:3px solid rgba(200,146,42,0.2);border-top-color:#e8b84b;border-radius:50%;animation:spin 0.8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .lm-nudge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);color:#fff;padding:8px 16px;border-radius:8px;font-size:1.1rem;font-weight:600;opacity:0;pointer-events:none;z-index:30;transition:opacity 0.2s}
+    .lm-nudge.show{opacity:1}
+    .lm-error{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#0a0a0e;color:#605848;font-size:0.9rem;z-index:20;text-align:center}
+    .lm-error-icon{font-size:2.5rem}
+
+    /* Controls */
+    .lm-controls{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,0.95) 0%,transparent 100%);padding:48px 16px 12px;z-index:10;transition:opacity 0.3s}
+    .lm-controls.hidden{opacity:0;pointer-events:none}
+    .lm-progress-wrap{width:100%;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;cursor:pointer;margin-bottom:10px;position:relative;transition:height 0.15s}
+    .lm-progress-wrap:hover{height:6px}
+    .lm-progress-fill{height:100%;background:linear-gradient(90deg,#c8922a,#e8b84b);border-radius:2px;width:0%;transition:width 0.1s linear;pointer-events:none;position:relative}
+    .lm-progress-fill::after{content:'';position:absolute;right:-6px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:#e8b84b;opacity:0;transition:opacity 0.2s}
+    .lm-progress-wrap:hover .lm-progress-fill::after{opacity:1}
+    .lm-bottom{display:flex;align-items:center;gap:8px}
+    .lm-btn{background:none;border:none;color:#fff;font-size:1rem;cursor:pointer;padding:4px 8px;border-radius:4px;transition:background 0.15s;line-height:1;flex-shrink:0}
+    .lm-btn:hover{background:rgba(255,255,255,0.15)}
+    .lm-play-btn{font-size:1.2rem}
+    .lm-vol-wrap{display:flex;align-items:center;gap:4px}
+    .lm-vol-slider{width:70px;height:3px;accent-color:#e8b84b;cursor:pointer}
+    .lm-time-wrap{font-size:0.78rem;color:rgba(255,255,255,0.8);white-space:nowrap;flex-shrink:0}
+    .lm-right{margin-left:auto;display:flex;align-items:center;gap:4px;position:relative}
+    .lm-menu{position:absolute;bottom:calc(100% + 8px);right:0;background:rgba(15,15,20,0.97);border:1px solid rgba(200,146,42,0.2);border-radius:8px;min-width:110px;overflow:hidden;display:none;z-index:50;backdrop-filter:blur(8px)}
+    .lm-menu.visible{display:block}
+    .lm-menu-item{padding:9px 16px;font-size:0.8rem;color:#a09880;cursor:pointer;transition:all 0.15s}
+    .lm-menu-item:hover{background:rgba(200,146,42,0.08);color:#e8b84b}
+    .lm-menu-item.active{color:#e8b84b;font-weight:600}
+    .lm-speed-text{font-size:0.75rem;font-weight:600}
+    .hidden{display:none!important}
+
+    /* ══ CTRL BAR ══ */
+    .ctrl-bar{background:#0a0a0e;border-bottom:1px solid rgba(200,146,42,0.07);padding:11px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    .ctrl-bar-left{display:flex;flex-direction:column;gap:2px}
+    .ctrl-bar-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:#e8b84b;line-height:1}
+    .ctrl-bar-ep{font-size:0.75rem;color:#605848}
+    .ctrl-bar-right{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+    .nav-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:7px;font-size:0.78rem;font-weight:500;cursor:pointer;text-decoration:none;transition:all 0.15s;border:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+    .nav-btn-gold{background:linear-gradient(135deg,#c8922a,#e8b84b);color:#0a0a0e;font-weight:600}
+    .nav-btn-gold:hover{opacity:0.85}
+    .nav-btn-ghost{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#a09880}
+    .nav-btn-ghost:hover{background:rgba(255,255,255,0.09);color:#e8e0d0}
+    .nav-btn-off{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);color:#333;cursor:not-allowed}
+
+    /* ══ LAYOUT ══ */
+    .watch-wrap{display:grid;grid-template-columns:1fr 300px;min-height:400px;background:#0a0a0e}
+    .watch-main{border-right:1px solid rgba(200,146,42,0.06)}
+
+    /* Episode Grid */
+    .ep-section{padding:16px 20px;border-bottom:1px solid rgba(200,146,42,0.06)}
+    .ep-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .ep-title{font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:3px;color:#e8b84b}
+    .ep-total{font-size:0.7rem;color:#605848}
+    .ep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px;max-height:160px;overflow-y:auto;padding-right:4px}
+    .ep-grid::-webkit-scrollbar{width:3px}
+    .ep-grid::-webkit-scrollbar-thumb{background:rgba(200,146,42,0.2);border-radius:2px}
+    .ep-item{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:0.75rem;font-weight:500;text-decoration:none;transition:all 0.15s;border:1px solid rgba(200,146,42,0.12);background:#141419;color:#a09880}
+    .ep-item:hover{background:rgba(200,146,42,0.1);border-color:rgba(200,146,42,0.3);color:#e8b84b}
+    .ep-item.active{background:linear-gradient(135deg,#c8922a,#e8b84b);border-color:transparent;color:#0a0a0e;font-weight:700}
+
+    /* Comments */
+    .cmt-section{padding:16px 20px}
+    .cmt-title{font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px}
+    .cmt-form{display:flex;gap:8px;align-items:flex-start;margin-bottom:16px}
+    .cmt-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#c8922a,#e8b84b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;color:#0a0a0e;flex-shrink:0}
+    .cmt-input{flex:1;background:#141419;border:1px solid rgba(200,146,42,0.12);border-radius:8px;padding:8px 12px;color:#e8e0d0;font-size:0.83rem;font-family:'DM Sans',sans-serif;resize:none;outline:none;min-height:52px;transition:border-color 0.2s}
+    .cmt-input:focus{border-color:rgba(200,146,42,0.3)}
+    .cmt-input::placeholder{color:#333}
+    .cmt-send{padding:5px 12px;border-radius:6px;background:linear-gradient(135deg,#c8922a,#e8b84b);border:none;color:#0a0a0e;font-size:0.75rem;font-weight:600;cursor:pointer;align-self:flex-end;font-family:'DM Sans',sans-serif;transition:opacity 0.15s}
+    .cmt-send:hover{opacity:0.85}
+    .cmt-list{display:flex;flex-direction:column}
+    .cmt-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .cmt-item:last-child{border-bottom:none}
+    .cmt-body{flex:1}
+    .cmt-meta{display:flex;gap:8px;align-items:baseline;margin-bottom:4px}
+    .cmt-user{font-size:0.8rem;font-weight:600;color:#e8e0d0}
+    .cmt-time{font-size:0.68rem;color:#333}
+    .cmt-text{font-size:0.82rem;color:#a09880;line-height:1.5}
+    .cmt-empty{text-align:center;padding:24px 0;color:#333;font-size:0.82rem;font-style:italic}
+    .cmt-login{margin-bottom:14px;padding:10px 14px;background:#141419;border:1px solid rgba(200,146,42,0.08);border-radius:8px;text-align:center;font-size:0.8rem;color:#605848}
+    .cmt-login a{color:#e8b84b;text-decoration:none;font-weight:600}
+
+    /* Sidebar */
+    .watch-sidebar{padding:16px;overflow-y:auto;max-height:calc(100vh - 64px);position:sticky;top:64px}
+    .rec-title{font-family:'Bebas Neue',sans-serif;font-size:0.82rem;letter-spacing:3px;color:#e8b84b;margin-bottom:12px}
+    .rec-list{display:flex;flex-direction:column;gap:8px}
+    .rec-item{display:flex;gap:9px;text-decoration:none;padding:7px;border-radius:8px;transition:background 0.15s}
+    .rec-item:hover{background:rgba(200,146,42,0.05)}
+    .rec-img{width:64px;height:96px;border-radius:5px;overflow:hidden;flex-shrink:0;background:#141419}
+    .rec-img img{width:100%;height:100%;object-fit:cover}
+    .rec-info{flex:1;min-width:0}
+    .rec-name{font-size:0.78rem;font-weight:600;color:#e8e0d0;margin-bottom:3px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .rec-item:hover .rec-name{color:#e8b84b}
+    .rec-year{font-size:0.68rem;color:#605848;margin-bottom:3px}
+    .rec-star{font-size:0.7rem;color:#e8b84b}
+
+    /* Breadcrumb */
+    .watch-bc{padding:8px 20px;background:#0a0a0e;border-bottom:1px solid rgba(200,146,42,0.05);display:flex;align-items:center;gap:5px;font-size:0.72rem;color:#3a3a3a}
+    .watch-bc a{color:#3a3a3a;text-decoration:none;transition:color 0.15s}
+    .watch-bc a:hover{color:#e8b84b}
+    .watch-bc .cur{color:#605848}
+  </style>
 </head>
-<body>
+<body th:data-movie-id="${movie.id}" th:data-episode-id="${currentEpisode?.id}">
+
 <div th:replace="~{fragments/header :: header}"></div>
 
-<div class="page-wrapper" style="background:#000">
+<div style="padding-top:64px">
 
   <!-- Breadcrumb -->
-  <div style="padding:16px 48px;background:#0a0a0e;border-bottom:1px solid rgba(200,146,42,0.08)">
-    <div class="breadcrumb">
-      <a th:href="@{/}">🏠 Trang Chủ</a>
-      <span class="breadcrumb-sep">›</span>
-      <a th:href="@{/movies}" >Phim</a>
-      <span class="breadcrumb-sep">›</span>
-      <a th:href="@{/movies/{slug}(slug=${movie.slug})}" th:text="${movie.title}">Tên Phim</a>
-      <span class="breadcrumb-sep">›</span>
-      <span class="breadcrumb-current" th:text="${currentEpisode != null ? 'Tập ' + currentEpisode.episodeNumber : 'Xem Phim'}">Xem Phim</span>
+  <div class="watch-bc">
+    <a th:href="@{/}">🏠</a>
+    <span>›</span>
+    <a th:href="@{/movies}">Phim</a>
+    <span>›</span>
+    <a th:href="@{/movies/{s}(s=${movie.slug})}" th:text="${movie.title}">Tên phim</a>
+    <span>›</span>
+    <span class="cur" th:if="${currentEpisode != null}"
+          th:text="'Tập ' + ${currentEpisode.episodeNumber}">Tập 1</span>
+    <span class="cur" th:unless="${currentEpisode != null}">Xem Phim</span>
+  </div>
+
+  <!-- ══ HLS PLAYER ══ -->
+  <div class="lm-player-wrap">
+    <video th:data-src="${currentEpisode?.videoUrl}"
+           preload="metadata" playsinline>
+    </video>
+    <div class="lm-overlay"></div>
+    <div class="lm-spinner"><div class="lm-spinner-ring"></div></div>
+    <div class="lm-nudge"></div>
+    <div class="lm-error">
+      <div class="lm-error-icon">📡</div>
+      <span>Không thể tải video</span>
+      <a th:href="@{/movies/{s}(s=${movie.slug})}" style="color:#e8b84b;font-size:0.82rem;margin-top:4px">← Quay lại trang phim</a>
+    </div>
+    <div class="lm-controls">
+      <div class="lm-progress-wrap"><div class="lm-progress-fill"></div></div>
+      <div class="lm-bottom">
+        <button class="lm-btn lm-play-btn">▶</button>
+        <div class="lm-vol-wrap">
+          <button class="lm-btn lm-vol-btn">🔊</button>
+          <input type="range" class="lm-vol-slider" min="0" max="100" value="100"/>
+        </div>
+        <div class="lm-time-wrap">
+          <span class="lm-time">0:00</span>
+          <span style="color:rgba(255,255,255,0.4)"> / </span>
+          <span class="lm-duration">0:00</span>
+        </div>
+        <div class="lm-right">
+          <div style="position:relative">
+            <button class="lm-btn lm-speed-btn"><span class="lm-speed-text">1x</span></button>
+            <div class="lm-menu lm-speed-menu">
+              <div class="lm-menu-item" data-speed="0.5">0.5x</div>
+              <div class="lm-menu-item" data-speed="0.75">0.75x</div>
+              <div class="lm-menu-item active" data-speed="1">1x</div>
+              <div class="lm-menu-item" data-speed="1.25">1.25x</div>
+              <div class="lm-menu-item" data-speed="1.5">1.5x</div>
+              <div class="lm-menu-item" data-speed="2">2x</div>
+            </div>
+          </div>
+          <div style="position:relative">
+            <button class="lm-btn lm-quality-btn hidden">🎞 Auto</button>
+            <div class="lm-menu lm-quality-menu"></div>
+          </div>
+          <button class="lm-btn lm-fs-btn" title="Toàn màn hình (F)">⛶</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 360px;min-height:calc(100vh - 130px)">
+  <!-- Ctrl bar -->
+  <div class="ctrl-bar">
+    <div class="ctrl-bar-left">
+      <div class="ctrl-bar-title" th:text="${movie.title}">Tên phim</div>
+      <div class="ctrl-bar-ep" th:if="${currentEpisode != null}"
+           th:text="'Tập ' + ${currentEpisode.episodeNumber}">Tập 1</div>
+      <div class="ctrl-bar-ep" th:unless="${currentEpisode != null}">Phim Lẻ</div>
+    </div>
+    <div class="ctrl-bar-right">
+      <a th:if="${prevEpisode != null}" th:href="@{/movies/{s}/watch(s=${movie.slug},ep=${prevEpisode.episodeNumber})}" class="nav-btn nav-btn-ghost">‹ Tập Trước</a>
+      <span th:unless="${prevEpisode != null}" class="nav-btn nav-btn-off">‹ Tập Trước</span>
+      <a th:if="${nextEpisode != null}" th:href="@{/movies/{s}/watch(s=${movie.slug},ep=${nextEpisode.episodeNumber})}" class="nav-btn nav-btn-gold" data-next-ep>Tập Sau ›</a>
+      <span th:unless="${nextEpisode != null}" class="nav-btn nav-btn-off">Tập Sau ›</span>
+      <a th:href="@{/movies/{s}(s=${movie.slug})}" class="nav-btn nav-btn-ghost">📋 Chi Tiết</a>
+      <button class="nav-btn nav-btn-ghost" onclick="copyWatchLink()">📤 Chia Sẻ</button>
+    </div>
+  </div>
 
-    <!-- ── VIDEO AREA ── -->
-    <div style="padding:0;background:#000">
+  <!-- Watch layout -->
+  <div class="watch-wrap">
+    <div class="watch-main">
 
-      <!-- Player -->
-      <div class="player-wrapper" style="border-radius:0;background:#000">
-        <video id="mainPlayer" controls autoplay
-               style="width:100%;max-height:70vh;background:#000;display:block"
-               th:src="${currentEpisode != null ? currentEpisode.videoUrl : movie.videoUrl}"
-               preload="auto">
-          Trình duyệt của bạn không hỗ trợ video.
-        </video>
-
-        <!-- Custom overlay controls (optional enhancement) -->
-        <div id="videoOverlay" style="
-          position:absolute;inset:0;display:none;
-          align-items:center;justify-content:center;
-          background:rgba(0,0,0,0.5)">
-          <button onclick="document.getElementById('mainPlayer').play()"
-                  style="width:64px;height:64px;border-radius:50%;
-                         background:linear-gradient(135deg,#c8922a,#e8b84b);
-                         border:none;color:#0a0a0e;font-size:1.4rem;cursor:pointer">▶</button>
+      <!-- Episode grid -->
+      <div class="ep-section" th:if="${allEpisodes != null and !#lists.isEmpty(allEpisodes)}">
+        <div class="ep-header">
+          <div class="ep-title">📺 Chọn Tập</div>
+          <div class="ep-total" th:text="${#lists.size(allEpisodes)} + ' tập'">0 tập</div>
+        </div>
+        <div class="ep-grid">
+          <a th:each="ep : ${allEpisodes}"
+             th:href="@{/movies/{s}/watch(s=${movie.slug},ep=${ep.episodeNumber})}"
+             th:text="${ep.episodeNumber}"
+             th:class="${currentEpisode != null and ep.episodeNumber == currentEpisode.episodeNumber} ? 'ep-item active' : 'ep-item'">1</a>
         </div>
       </div>
 
-      <!-- Video info bar -->
-      <div style="padding:16px 24px;background:#0a0a0e;border-bottom:1px solid rgba(200,146,42,0.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-        <div>
-          <h2 style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#e8b84b"
-              th:text="${movie.title}">Tên Phim</h2>
-          <p style="font-size:0.78rem;color:#605848;margin-top:2px"
-             th:text="${currentEpisode != null ? 'Tập ' + currentEpisode.episodeNumber + (currentEpisode.title != null ? ' — ' + currentEpisode.title : '') : 'Phim Lẻ'}">Tập 1</p>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <!-- Prev episode -->
-          <a th:if="${prevEpisode != null}"
-             th:href="@{/movies/{slug}/watch(slug=${movie.slug}, ep=${prevEpisode.episodeNumber})}"
-             class="btn btn-ghost btn-sm">‹ Tập Trước</a>
-          <!-- Next episode -->
-          <a th:if="${nextEpisode != null}"
-             th:href="@{/movies/{slug}/watch(slug=${movie.slug}, ep=${nextEpisode.episodeNumber})}"
-             class="btn btn-gold btn-sm">Tập Sau ›</a>
-          <!-- Back to detail -->
-          <a th:href="@{/movies/{slug}(slug=${movie.slug})}" class="btn btn-ghost btn-sm">📋 Chi Tiết</a>
-        </div>
-      </div>
-
-      <!-- Episode grid (series/anime) -->
-      <div th:if="${movie.type != 'MOVIE' and !movie.episodes.empty}"
-           style="padding:20px 24px;background:#0a0a0e">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">📺 Chọn Tập</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px">
-          <a th:each="episode : ${movie.episodes}"
-             th:href="@{/movies/{slug}/watch(slug=${movie.slug}, ep=${episode.episodeNumber})}"
-             th:text="${episode.episodeNumber}"
-             th:style="${episode.episodeNumber == currentEpisode?.episodeNumber} ?
-               'background:linear-gradient(135deg,#c8922a,#e8b84b);border-color:transparent;color:#0a0a0e;font-weight:700' :
-               'background:#141419;border-color:rgba(200,146,42,0.15);color:#a09880'"
-             style="
-               aspect-ratio:1;display:flex;align-items:center;justify-content:center;
-               border-radius:8px;font-size:0.82rem;
-               border:1px solid;transition:all 0.15s;text-decoration:none;font-family:'DM Sans',sans-serif;"
-             onmouseover="if(!this.style.background.includes('gradient'))this.style.background='rgba(200,146,42,0.12)'"
-             onmouseout="if(!this.style.background.includes('gradient'))this.style.background='#141419'">1</a>
-        </div>
-      </div>
-
-      <!-- Comment section -->
-      <div style="padding:24px;background:#0a0a0e">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:16px">💬 Bình Luận</div>
-
-        <!-- Form -->
-        <div sec:authorize="isAuthenticated()" style="margin-bottom:20px">
+      <!-- Comments -->
+      <div class="cmt-section">
+        <div class="cmt-title">💬 Bình Luận <span style="font-size:0.72rem;color:#605848;font-family:'DM Sans',sans-serif;font-weight:400;margin-left:5px" th:text="'(' + ${#lists.size(comments)} + ')'"></span></div>
+        <div sec:authorize="isAuthenticated()">
           <form th:action="@{/movies/{id}/comment(id=${movie.id})}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <div style="display:flex;gap:10px;align-items:flex-start">
-              <div class="comment-avatar" sec:authentication="principal.username"
-                   style="font-size:0.8rem">U</div>
-              <div style="flex:1">
-                <textarea name="content" class="form-input" rows="2"
-                          placeholder="Nhận xét về phim này..." style="resize:none;margin-bottom:8px"></textarea>
-                <button type="submit" class="btn btn-gold btn-sm">Gửi</button>
-              </div>
+            <input type="hidden" name="redirect" th:value="@{/movies/{s}/watch(s=${movie.slug},ep=${currentEpisode?.episodeNumber ?: 1})}"/>
+            <div class="cmt-form">
+              <div class="cmt-av" th:text="${#strings.substring(#authentication.principal.username,0,1).toUpperCase()}">U</div>
+              <textarea class="cmt-input" name="content" placeholder="Nhận xét về phim..." rows="2"></textarea>
+              <button type="submit" class="cmt-send">Gửi</button>
             </div>
           </form>
         </div>
-        <div sec:authorize="isAnonymous()" style="margin-bottom:20px;text-align:center;padding:14px;background:#141419;border-radius:10px">
-          <a th:href="@{/auth/login}" style="color:#e8b84b">Đăng nhập</a>
-          <span style="color:#605848;font-size:0.84rem"> để bình luận</span>
-        </div>
-
-        <!-- Comments -->
-        <div th:each="comment : ${comments}" class="comment-item">
-          <div class="comment-avatar" th:text="${#strings.substring(comment.user.username,0,1).toUpperCase()}">U</div>
-          <div>
-            <div style="display:flex;gap:10px;align-items:baseline">
-              <span class="comment-name" th:text="${comment.user.username}">User</span>
-              <span class="comment-time" th:text="${#temporals.format(comment.createdAt,'dd/MM/yyyy HH:mm')}">01/01</span>
+        <div sec:authorize="isAnonymous()" class="cmt-login"><a th:href="@{/auth/login}">Đăng nhập</a> để bình luận</div>
+        <div class="cmt-list">
+          <div th:if="${#lists.isEmpty(comments)}" class="cmt-empty">Chưa có bình luận nào 💬</div>
+          <div th:each="c : ${comments}" class="cmt-item">
+            <div class="cmt-av" th:text="${#strings.substring(c.user.username,0,1).toUpperCase()}">U</div>
+            <div class="cmt-body">
+              <div class="cmt-meta">
+                <span class="cmt-user" th:text="${c.user.username}">User</span>
+                <span class="cmt-time" th:text="${#temporals.format(c.createdAt,'dd/MM/yyyy HH:mm')}">01/01</span>
+              </div>
+              <div class="cmt-text" th:text="${c.content}">Nội dung</div>
             </div>
-            <p class="comment-text" th:text="${comment.content}">Nội dung</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── RIGHT SIDEBAR ── -->
-    <aside style="background:#0a0a0e;border-left:1px solid rgba(200,146,42,0.08);padding:20px;overflow-y:auto;max-height:calc(100vh - 130px);position:sticky;top:64px">
-
-      <!-- Movie poster + info -->
-      <div style="display:flex;gap:12px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid rgba(200,146,42,0.1)">
-        <div style="width:70px;height:105px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(200,146,42,0.2)">
-          <img th:if="${movie.posterUrl != null}" th:src="${movie.posterUrl}" style="width:100%;height:100%;object-fit:cover"/>
-          <div th:unless="${movie.posterUrl != null}" style="width:100%;height:100%;background:#1a1a22;display:flex;align-items:center;justify-content:center">🎬</div>
-        </div>
-        <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:#e8b84b;line-height:1.2;margin-bottom:6px" th:text="${movie.title}">Tên Phim</div>
-          <div style="font-size:0.75rem;color:#605848;margin-bottom:4px" th:text="${movie.releaseYear}">2024</div>
-          <div style="font-size:0.75rem;color:#e8b84b">⭐ <span th:text="${#numbers.formatDecimal(movie.avgRating,1,1)}">8.5</span></div>
-          <a th:href="@{/movies/{slug}(slug=${movie.slug})}" style="display:inline-block;margin-top:8px;font-size:0.72rem;color:#605848;text-decoration:none;border:1px solid rgba(200,146,42,0.2);padding:3px 10px;border-radius:4px">Xem Chi Tiết</a>
-        </div>
-      </div>
-
-      <!-- Recommended -->
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">🎬 Xem Tiếp</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <a th:each="rec : ${recommended}"
-           th:href="@{/movies/{slug}/watch(slug=${rec.slug})}"
-           style="display:flex;gap:10px;align-items:center;text-decoration:none;padding:8px;border-radius:8px;transition:background 0.15s"
-           onmouseover="this.style.background='rgba(200,146,42,0.05)'"
-           onmouseout="this.style.background=''">
-          <div style="width:64px;height:96px;border-radius:6px;overflow:hidden;flex-shrink:0;background:#141419">
-            <img th:if="${rec.posterUrl != null}" th:src="${rec.posterUrl}" style="width:100%;height:100%;object-fit:cover"/>
-            <div th:unless="${rec.posterUrl != null}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.3rem">🎬</div>
+    <!-- Sidebar -->
+    <aside class="watch-sidebar">
+      <div class="rec-title">🎬 Có Thể Bạn Thích</div>
+      <div class="rec-list">
+        <a th:each="rec : ${recommended}" th:href="@{/movies/{s}/watch(s=${rec.slug})}" class="rec-item">
+          <div class="rec-img">
+            <img th:if="${rec.posterUrl != null}" th:src="${rec.posterUrl}" th:alt="${rec.title}" loading="lazy"/>
+            <div th:unless="${rec.posterUrl != null}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#3a3a3a">🎬</div>
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:0.8rem;font-weight:600;color:#e8e0d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px" th:text="${rec.title}">Phim</div>
-            <div style="font-size:0.7rem;color:#605848;margin-bottom:3px" th:text="${rec.releaseYear}">2024</div>
-            <div style="font-size:0.7rem;color:#e8b84b">⭐ <span th:text="${#numbers.formatDecimal(rec.avgRating,1,1)}">8.0</span></div>
+          <div class="rec-info">
+            <div class="rec-name" th:text="${rec.title}">Tên</div>
+            <div class="rec-year" th:text="${rec.releaseYear}">2024</div>
+            <div class="rec-star">⭐ <span th:text="${rec.avgRating != null} ? ${#numbers.formatDecimal(rec.avgRating,1,1)} : '—'">8.0</span></div>
           </div>
         </a>
+        <div th:if="${#lists.isEmpty(recommended)}" style="color:#3a3a3a;font-size:0.78rem;text-align:center;padding:20px 0">Chưa có gợi ý</div>
       </div>
     </aside>
   </div>
 </div>
-
+<div th:replace="~{fragments/footer :: footer}"></div>
 <script th:src="@{/js/player.js}"></script>
+<script>
+  function copyWatchLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      const btn = event.currentTarget;
+      const orig = btn.textContent;
+      btn.textContent = '✅ Đã Copy!';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  }
+</script>
 </body>
 </html>

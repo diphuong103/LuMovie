@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -114,16 +115,9 @@ public class WebController {
     @PostMapping("/movies/{id}/comment")
     public String addComment(@PathVariable Long id,
                              @RequestParam String content,
-                             Authentication auth,
-                             RedirectAttributes redirectAttrs) {
-
-        if (auth == null || auth instanceof AnonymousAuthenticationToken)
-            return "redirect:/auth/login";
-
-        if (content == null || content.isBlank()) {
-            redirectAttrs.addFlashAttribute("commentError", "Nội dung không được trống");
-            return "redirect:" + resolveSlugRedirect(id);
-        }
+                             @RequestParam(required = false) String redirect,
+                             Authentication auth) {
+        if (auth == null) return "redirect:/auth/login";
 
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         Movie movie = movieRepository.findById(id).orElseThrow();
@@ -134,7 +128,10 @@ public class WebController {
         comment.setContent(content.trim());
         commentRepository.save(comment);
 
-        redirectAttrs.addFlashAttribute("commentSuccess", "Đã gửi bình luận!");
+        // Redirect về trang watch nếu comment từ trang watch
+        if (redirect != null && !redirect.isBlank()) {
+            return "redirect:" + redirect;
+        }
         return "redirect:/movies/" + movie.getSlug() + "#comments";
     }
 
@@ -199,6 +196,50 @@ public class WebController {
 
         String referer = request.getHeader("Referer");
         return "redirect:" + (referer != null ? referer : "/");
+    }
+
+    @GetMapping("/movies/{slug}/watch")
+    @Transactional
+    public String watchMovie(@PathVariable String slug,
+                             @RequestParam(defaultValue = "1") int ep,
+                             Model model) {
+
+        MovieResponse movie = movieService.getBySlug(slug);
+        model.addAttribute("movie", movie);
+
+        List<Episode> allEpisodes = episodeRepository
+                .findByMovieIdOrderByEpisodeNumberAsc(movie.getId());
+        model.addAttribute("allEpisodes", allEpisodes);
+
+        Episode currentEpisode = allEpisodes.stream()
+                .filter(e -> e.getEpisodeNumber() != null && e.getEpisodeNumber() == ep)
+                .findFirst()
+                .orElse(allEpisodes.isEmpty() ? null : allEpisodes.get(0));
+        model.addAttribute("currentEpisode", currentEpisode);
+
+        if (currentEpisode != null) {
+            int cur = currentEpisode.getEpisodeNumber();
+            model.addAttribute("prevEpisode", allEpisodes.stream()
+                    .filter(e -> e.getEpisodeNumber() == cur - 1).findFirst().orElse(null));
+            model.addAttribute("nextEpisode", allEpisodes.stream()
+                    .filter(e -> e.getEpisodeNumber() == cur + 1).findFirst().orElse(null));
+        } else {
+            model.addAttribute("prevEpisode", null);
+            model.addAttribute("nextEpisode", null);
+        }
+
+        model.addAttribute("comments",
+                commentRepository.findByMovieIdOrderByCreatedAtDesc(movie.getId()));
+
+        model.addAttribute("recommended", movieService.getRelated(movie.getId(), 6));
+        movieService.incrementView(movie.getId());
+
+        // Label cho episode
+        String epLabel = currentEpisode != null
+                ? "Tập " + currentEpisode.getEpisodeNumber() : "Phim Lẻ";
+        model.addAttribute("epLabel", epLabel);
+
+        return "movie/watch";
     }
 
     /* ══════════════════════════════════════

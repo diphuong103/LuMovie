@@ -11,5 +11,6 @@ public class RefreshToken {
     @ManyToOne @JoinColumn(name = "user_id", nullable = false) private User user;
     @Column(unique = true, nullable = false, length = 512) private String token;
     private LocalDateTime expiresAt;
+    @Builder.Default
     private boolean revoked = false;
 }

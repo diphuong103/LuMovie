@@ -36,8 +36,8 @@
 
       <!-- Poster -->
       <div class="detail-poster">
-        <img th:if="${movie.backdropUrl != null}"
-             th:src="${movie.backdropUrl}" th:alt="${movie.title}"/>
+        <img th:if="${movie.posterUrl != null}"
+             th:src="${movie.posterUrl}" th:alt="${movie.title}"/>
         <div th:unless="${movie.backdropUrl != null}"
              class="detail-poster__placeholder">🎬</div>
       </div>
@@ -127,7 +127,7 @@
       </div>
 
       <!-- Danh sách tập (series / anime) -->
-      <div th:if="${(movie.type == null or movie.type.name() != 'MOVIE') and not #lists.isEmpty(movie.episodes)}" class="card">
+      <div th:if="${(movie.type == null or movie.type.name() != 'MOVIE') and not #lists.isEmpty(movie.episodes)}" class="card" >
         <div class="card-heading">
           📺 Danh Sách Tập
           <span class="count" th:text="${movie.episodes.size()} + ' tập'">12 tập</span>
@@ -254,9 +254,9 @@
           <div class="info-row">
             <span class="info-row__label">Trạng thái</span>
             <span th:if="${movie.status != null and movie.status.name() == 'COMPLETED'}"
-                  class="info-row__value info-status-done">✅ Hoàn Thành</span>
+                  class="info-row__value info-status-done">Hoàn Thành</span>
             <span th:if="${movie.status != null and movie.status.name() == 'ONGOING'}"
-                  class="info-row__value info-status-ongoing">🔄 Đang Chiếu</span>
+                  class="info-row__value info-status-ongoing">Đang Chiếu</span>
           </div>
 
         </div>

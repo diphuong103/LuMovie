@@ -22,12 +22,16 @@ public class Movie extends BaseEntity {
     private Integer duration;
     private String director;
     private String actors;
+    @Builder.Default
     private Double avgRating = 0.0;
+    @Builder.Default
     private Long viewCount = 0L;
     private String country;
     private String language;
     private String slug;
+    @Builder.Default
     @Enumerated(EnumType.STRING) private MovieStatus status = MovieStatus.COMPLETED;
+    @Builder.Default
     @Enumerated(EnumType.STRING) private MovieType type = MovieType.MOVIE;
     @ManyToMany
     @JoinTable(name = "movie_genres",

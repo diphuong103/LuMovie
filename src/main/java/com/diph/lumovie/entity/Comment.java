@@ -13,5 +13,6 @@ public class Comment extends BaseEntity {
     @ManyToOne @JoinColumn(name = "parent_id") private Comment parent;
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL) private List<Comment> replies;
     @Column(columnDefinition = "TEXT", nullable = false) private String content;
+    @Builder.Default
     private Integer likes = 0;
 }

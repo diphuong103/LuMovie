@@ -26,7 +26,7 @@ public class SecurityConfig {
             "/error",
             "/dev/**", // thư mục dev
             "/css/**", "/js/**", "/images/**",  // cho phép load
-            "/api/auth/**","/api/movies/**","/api/genres/**","/api/search/**",
+            "/api/auth/**","/api/movies/**","/api/genres/**","/api/search/**","/api/watch/**",
         "/swagger-ui/**","/v3/api-docs/**","/actuator/**"  //swagger-ui (giao diện web hiển thị danh sách API và cho phép test trực tiếp).
     };
     @Bean
