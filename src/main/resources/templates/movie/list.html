@@ -24,6 +24,7 @@
       <div>
         <h1 style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:5px;color:#e8b84b;margin-bottom:6px"
             th:text="${pageTitle ?: 'TẤT CẢ PHIM'}">TẤT CẢ PHIM</h1>
+        <!-- ✅ Fix lỗi 2: dùng totalElements thay vì size() -->
         <p style="font-size:0.83rem;color:#605848"
            th:text="${movies.totalElements} + ' bộ phim được tìm thấy'">0 bộ phim</p>
       </div>
@@ -34,7 +35,7 @@
         <input type="hidden" name="genre" th:value="${param.genre}"/>
         <select name="sort" class="form-input" style="width:auto;padding:9px 36px 9px 14px;font-size:0.83rem"
                 onchange="this.form.submit()">
-          <option value="latest" th:selected="${param.sort == 'latest'}">Mới Nhất</option>
+          <option value="latest"   th:selected="${param.sort == 'latest'}">Mới Nhất</option>
           <option value="topRated" th:selected="${param.sort == 'topRated'}">Đánh Giá Cao</option>
           <option value="trending" th:selected="${param.sort == 'trending'}">Thịnh Hành</option>
           <option value="viewCount" th:selected="${param.sort == 'viewCount'}">Xem Nhiều</option>
@@ -47,17 +48,30 @@
       <!-- ── FILTER SIDEBAR ── -->
       <aside>
         <form th:action="@{/movies}" method="get">
-          <!-- Loại phim -->
+
+          <!-- Loại phim — ✅ Fix lỗi 1: cấu trúc label đúng, đổi biến thành t -->
           <div class="card" style="margin-bottom:16px">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">Loại Phim</div>
             <div style="display:flex;flex-direction:column;gap:8px">
-              <label th:each="type : ${ {'', 'MOVIE', 'SERIES', 'ANIME', 'TV_SHOW'} }" style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="radio" name="type" th:value="${type}"
-                       th:checked="${param.type == type}"
+
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <input type="radio" name="type" value=""
+                       th:checked="${param.type == null or param.type == ''}"
+                       style="accent-color:#e8b84b"/>
+                <span style="font-size:0.84rem;color:#a09880">🎬 Tất Cả</span>
+              </label>
+
+              <label th:each="t : ${types}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <input type="radio" name="type" th:value="${t.name()}"
+                       th:checked="${param.type == t.name()}"
                        style="accent-color:#e8b84b"/>
                 <span style="font-size:0.84rem;color:#a09880"
-                      th:text="${type == '' ? '🎬 Tất Cả' : (type == 'MOVIE' ? '🎥 Phim Lẻ' : (type == 'SERIES' ? '📺 Phim Bộ' : (type == 'ANIME' ? '🎌 Anime' : '📡 TV Show')))}">Tất Cả</span>
+                      th:text="${t.name() == 'MOVIE'   ? '🎥 Phim Lẻ'  :
+                                (t.name() == 'SERIES'  ? '📺 Phim Bộ'  :
+                                (t.name() == 'ANIME'   ? '🎌 Anime'    : '📡 TV Show'))}">
+                </span>
               </label>
+
             </div>
           </div>
 
@@ -110,8 +124,8 @@
 
       <!-- ── MOVIE GRID ── -->
       <div>
-        <!-- Empty state -->
-        <div th:if="${movies.empty}" style="text-align:center;padding:80px 0">
+        <!-- ✅ Fix lỗi 3: dùng totalElements thay vì #lists.isEmpty -->
+        <div th:if="${movies.totalElements == 0}" style="text-align:center;padding:80px 0">
           <div style="font-size:4rem;margin-bottom:16px">🎬</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#605848;margin-bottom:8px">KHÔNG TÌM THẤY PHIM</div>
           <p style="font-size:0.85rem;color:#605848">Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
@@ -119,19 +133,20 @@
         </div>
 
         <!-- Movie grid -->
-        <div th:unless="${movies.empty}" class="movie-grid movie-grid-4" style="margin-bottom:32px">
-          <div th:each="movie : ${movies.content}"
-               th:replace="~{fragments/movie-card :: card(movie=${movie})}">
-          </div>
+        <div th:unless="${movies.totalElements == 0}" class="movie-grid movie-grid-4" style="margin-bottom:32px">
+          <th:block th:each="movie : ${movies.content}">
+            <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+          </th:block>
         </div>
 
         <!-- Pagination -->
-        <div th:unless="${movies.empty}" class="pagination">
+        <div th:unless="${movies.totalElements == 0}" class="pagination">
+
           <!-- Prev -->
-          <a th:if="${movies.hasPreviousPage()}"
+          <a th:if="${movies.number > 0}"
              th:href="@{/movies(page=${movies.number - 1}, size=${movies.size}, sort=${param.sort}, type=${param.type}, genre=${param.genre})}"
              class="page-btn">‹</a>
-          <span th:unless="${movies.hasPreviousPage()}" class="page-btn" style="opacity:0.3">‹</span>
+          <span th:unless="${movies.number > 0}" class="page-btn" style="opacity:0.3">‹</span>
 
           <!-- Pages -->
           <a th:each="i : ${#numbers.sequence(0, movies.totalPages - 1)}"
@@ -142,10 +157,11 @@
              th:text="${i + 1}">1</a>
 
           <!-- Next -->
-          <a th:if="${movies.hasNextPage()}"
+          <a th:if="${movies.number < movies.totalPages - 1}"
              th:href="@{/movies(page=${movies.number + 1}, size=${movies.size}, sort=${param.sort}, type=${param.type}, genre=${param.genre})}"
              class="page-btn">›</a>
-          <span th:unless="${movies.hasNextPage()}" class="page-btn" style="opacity:0.3">›</span>
+          <span th:unless="${movies.number < movies.totalPages - 1}" class="page-btn" style="opacity:0.3">›</span>
+
         </div>
       </div>
     </div>

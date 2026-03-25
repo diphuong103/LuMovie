@@ -10,10 +10,14 @@ import com.diph.lumovie.mapper.MovieMapper;
 import com.diph.lumovie.repository.*;
 import com.diph.lumovie.service.MovieService;
 import com.diph.lumovie.util.SlugUtils;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -45,8 +49,15 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<MovieResponse> search(String keyword, Pageable pageable) {
-        return toPageResponse(movieRepository.findByTitleContainingIgnoreCase(keyword, pageable));
+        return toPageResponse(movieRepository.searchByKeyword(keyword, pageable));
+    }
+
+    @Override
+    public Page<MovieResponse> searchPage(String keyword, Pageable pageable) {
+        return movieRepository.searchByKeyword(keyword, pageable)
+                .map(movieMapper::toResponse);
     }
 
     @Override
@@ -61,7 +72,7 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<MovieResponse> getTrending() {
+    public List<MovieResponse> getTrending(PageRequest pageRequest) {
         return movieRepository.findTop10ByOrderByViewCountDesc()
                 .stream()
                 .map(movieMapper::toResponse)
@@ -160,11 +171,55 @@ public class MovieServiceImpl implements MovieService {
         return genreRepository.findAll();
     }
 
+    @Override
+    public Page<MovieResponse> filterMovies(String genre, String type, String sort, Pageable pageable) {
+        // 1. Tạo Specification (Điều kiện lọc động)
+        Specification<Movie> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Lọc theo Thể loại (Genre Slug) - Join với bảng Genres
+            if (genre != null && !genre.isEmpty()) {
+                predicates.add(cb.equal(root.join("genres").get("slug"), genre));
+            }
+
+            // Lọc theo Loại phim (MOVIE, SERIES, ANIME...)
+            if (type != null && !type.isEmpty()) {
+                predicates.add(cb.equal(root.get("type"), type));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        // 2. Xử lý Sắp xếp (Sort) thủ công nếu pageable chưa có sort
+        // Hoặc bạn có thể để Spring xử lý thông qua tham số sort trên URL
+
+        // 3. Truy vấn Database với Spec và Pageable
+        Page<Movie> moviePage = movieRepository.findAll(spec, pageable);
+
+        // 4. Map kết quả sang MovieResponse
+        return moviePage.map(movie -> movieMapper.toResponse(movie));
+    }
+
     private PageResponse<MovieResponse> toPageResponse(Page<Movie> page) {
         return PageResponse.<MovieResponse>builder()
             .content(page.getContent().stream().map(movieMapper::toResponse).collect(Collectors.toList()))
             .pageNumber(page.getNumber()).pageSize(page.getSize())
             .totalElements(page.getTotalElements()).totalPages(page.getTotalPages())
             .last(page.isLast()).build();
+    }
+
+    public Page<MovieResponse> getMovies(String genreSlug, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<Movie> moviePage;
+        if (genreSlug != null && !genreSlug.isEmpty()) {
+            // Lọc theo thể loại
+            moviePage = movieRepository.findByGenres_Slug(genreSlug, pageable);
+        } else {
+            // Không có lọc, lấy hết
+            moviePage = movieRepository.findAll(pageable);
+        }
+
+        return moviePage.map(movieMapper::toResponse);
     }
 }

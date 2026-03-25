@@ -30,11 +30,11 @@
 
       <!-- Quick genre buttons -->
       <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:24px">
-        <a th:href="@{/movies?genre=hanh-dong}" class="genre-pill gp-1" style="padding:6px 14px;font-size:0.75rem"><span>⚔ Hành Động</span></a>
-        <a th:href="@{/movies?genre=vien-tuong}" class="genre-pill gp-2" style="padding:6px 14px;font-size:0.75rem"><span>🚀 Viễn Tưởng</span></a>
-        <a th:href="@{/movies?genre=tinh-cam}" class="genre-pill gp-3" style="padding:6px 14px;font-size:0.75rem"><span>💕 Tình Cảm</span></a>
-        <a th:href="@{/movies?genre=kinh-di}" class="genre-pill gp-6" style="padding:6px 14px;font-size:0.75rem"><span>🔮 Kinh Dị</span></a>
-        <a th:href="@{/movies?type=ANIME}" class="genre-pill gp-7" style="padding:6px 14px;font-size:0.75rem"><span>🎌 Anime</span></a>
+        <a th:href="@{/movies?genre='hanh-dong'}" class="genre-pill gp-1" style="padding:6px 14px;font-size:0.75rem"><span>⚔ Hành Động</span></a>
+        <a th:href="@{/movies?genre='vien-tuong'}" class="genre-pill gp-2" style="padding:6px 14px;font-size:0.75rem"><span>🚀 Viễn Tưởng</span></a>
+        <a th:href="@{/movies?genre='tinh-cam'}" class="genre-pill gp-3" style="padding:6px 14px;font-size:0.75rem"><span>💕 Tình Cảm</span></a>
+        <a th:href="@{/movies?genre='kinh-di'}" class="genre-pill gp-6" style="padding:6px 14px;font-size:0.75rem"><span>🔮 Kinh Dị</span></a>
+        <a th:href="@{/movies?type='ANIME'}" class="genre-pill gp-7" style="padding:6px 14px;font-size:0.75rem"><span>🎌 Anime</span></a>
       </div>
     </div>
 
@@ -48,11 +48,11 @@
           <span style="font-size:0.9rem;font-weight:600;color:#e8b84b" th:text="'&quot;' + ${param.q} + '&quot;'">"query"</span>
         </div>
         <span style="font-size:0.8rem;color:#605848"
-              th:text="${movies.totalElements} + ' kết quả'">0 kết quả</span>
+              th:text="${totalItems} + ' kết quả'">0 kết quả</span>
       </div>
 
       <!-- No results -->
-      <div th:if="${movies.empty}" style="text-align:center;padding:80px 0">
+      <div th:if="${#lists.isEmpty(movies)}" style="text-align:center;padding:80px 0">
         <div style="font-size:4rem;margin-bottom:16px;opacity:0.5">🎬</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#605848;margin-bottom:10px">KHÔNG TÌM THẤY KẾT QUẢ</div>
         <p style="font-size:0.85rem;color:#605848;margin-bottom:24px">Thử tìm với từ khóa khác hoặc kiểm tra chính tả</p>
@@ -68,36 +68,46 @@
       </div>
 
       <!-- Results grid -->
-      <div th:unless="${movies.empty}">
+      <div th:unless="${#lists.isEmpty(movies)}">
         <div class="movie-grid" style="margin-bottom:32px">
-          <div th:each="movie : ${movies.content}"
-               th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+          
+          <th:block th:each="movie : ${movies}">
+            <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+          </th:block>
+
         </div>
 
         <!-- Pagination -->
         <div class="pagination">
-          <a th:if="${movies.hasPreviousPage()}"
-             th:href="@{/search(q=${param.q}, page=${movies.number - 1})}"
+          <a th:if="${hasPrev}"
+             th:href="@{/search(q=${param.q}, page=${currentPage - 1})}"
              class="page-btn">‹</a>
-          <a th:each="i : ${#numbers.sequence(0, movies.totalPages - 1)}"
-             th:if="${i >= movies.number - 2 and i <= movies.number + 2}"
+
+          <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
              th:href="@{/search(q=${param.q}, page=${i})}"
-             class="page-btn" th:classappend="${i == movies.number} ? ' active'"
-             th:text="${i + 1}">1</a>
-          <a th:if="${movies.hasNextPage()}"
-             th:href="@{/search(q=${param.q}, page=${movies.number + 1})}"
+             th:classappend="${i == currentPage} ? ' active'"
+             th:text="${i + 1}"
+             class="page-btn">1</a>
+
+          <a th:if="${hasNext}"
+             th:href="@{/search(q=${param.q}, page=${currentPage + 1})}"
              class="page-btn">›</a>
+        </div>
+      </div>
+
         </div>
       </div>
     </div>
 
-    <!-- Default state (no query) — trending -->
-    <div th:unless="${param.q != null}">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:4px;color:#e8b84b;margin-bottom:20px">🔥 Phim Thịnh Hành</div>
-      <div class="movie-grid">
-        <div th:each="movie : ${trendingMovies}"
-             th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
-      </div>
+<div th:unless="${param.q != null}">
+  <div style="font-family:'Bebas Neue',sans-serif;">🔥 Phim Thịnh Hành</div>
+  <div class="movie-grid">
+
+    <th:block th:each="movie : ${movies}">
+      <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+    </th:block>
+
+  </div>
     </div>
 
   </div>

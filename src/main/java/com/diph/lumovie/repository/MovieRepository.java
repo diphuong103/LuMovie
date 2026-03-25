@@ -30,12 +30,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
 //
 //    @Query("SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres ORDER BY m.createdAt DESC")
 //    List<Movie> findTop10ByOrderByCreatedAtDesc();
+boolean existsBySlug(String slug);
 
-    boolean existsBySlug(String slug);
-    Page<Movie> findByTitleContainingIgnoreCase(String title, Pageable pageable);
-    @Modifying
-    @Query("UPDATE Movie m SET m.viewCount = m.viewCount + 1 WHERE m.id = :id")
-    void incrementViewCount(Long id);
+
 
     @Query("""
     SELECT DISTINCT m FROM Movie m JOIN m.genres g
@@ -55,6 +52,24 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
     )
     ORDER BY m.viewCount DESC
     """)
+
+
+    // Search movie
     List<Movie> findTop6TrendingWithGenres();
 
+    @Query(value = "SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres " +
+            "WHERE LOWER(m.title) LIKE LOWER(CONCAT('%',:keyword,'%')) " +
+            "OR LOWER(m.description) LIKE LOWER(CONCAT('%',:keyword,'%'))",
+            countQuery = "SELECT COUNT(DISTINCT m) FROM Movie m " +
+                    "WHERE LOWER(m.title) LIKE LOWER(CONCAT('%',:keyword,'%')) " +
+                    "OR LOWER(m.description) LIKE LOWER(CONCAT('%',:keyword,'%'))")
+    Page<Movie> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+
+    Page<Movie> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+    @Modifying
+    @Query("UPDATE Movie m SET m.viewCount = m.viewCount + 1 WHERE m.id = :id")
+    void incrementViewCount(Long id);
+
+    Page<Movie> findByGenres_Slug(String genreSlug, Pageable pageable);
 }

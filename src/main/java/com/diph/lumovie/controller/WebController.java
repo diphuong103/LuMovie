@@ -2,10 +2,15 @@ package com.diph.lumovie.controller;
 
 import com.diph.lumovie.dto.response.MovieResponse;
 import com.diph.lumovie.entity.*;
+import com.diph.lumovie.enums.MovieType;
 import com.diph.lumovie.repository.*;
 import com.diph.lumovie.service.MovieService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.annotation.AccessType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -15,8 +20,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +44,7 @@ public class WebController {
     @GetMapping("/")
     public String home(Model model) {
         try {
-            model.addAttribute("trendingMovies", movieService.getTrending());
+            model.addAttribute("trendingMovies", movieService.getTrending(PageRequest.of(0, 20)));
             model.addAttribute("latestMovies",   movieService.getLatest());
             model.addAttribute("topRatedMovies", movieService.getTopRated());
             model.addAttribute("featuredMovie",  movieService.getFeatured());
@@ -240,6 +245,63 @@ public class WebController {
         model.addAttribute("epLabel", epLabel);
 
         return "movie/watch";
+    }
+
+
+    /* ══════════════════════════════════════
+      SEARCH
+   ══════════════════════════════════════ */
+    @GetMapping("/search")
+    public String searchMovie(@RequestParam(name = "q", required = false) String query,
+                              @RequestParam(defaultValue = "0") int page,
+                              Model model,
+                              Authentication auth) {
+
+        model.addAttribute("types", AccessType.Type.values());
+
+        if (query != null && !query.isBlank()) {
+            Pageable pageable = PageRequest.of(page, 10);
+            Page<MovieResponse> searchResults = movieService.searchPage(query, pageable);
+
+            model.addAttribute("movies",       searchResults.getContent());
+            model.addAttribute("totalItems",   searchResults.getTotalElements());
+            model.addAttribute("totalPages",   searchResults.getTotalPages());
+            model.addAttribute("currentPage",  page);
+            model.addAttribute("hasPrev",      page > 0);
+            model.addAttribute("hasNext",      page < searchResults.getTotalPages() - 1);
+        } else {
+
+            Page<MovieResponse> trending = (Page<MovieResponse>) movieService.getTrending(PageRequest.of(0, 20));
+            model.addAttribute("movies", trending.getContent());
+        }
+
+        if (auth != null && auth.isAuthenticated()) {
+            model.addAttribute("user", auth.getPrincipal());
+        }
+
+        return "movie/search";
+
+    }
+
+    @GetMapping("/movies")
+    public String listMovies(@RequestParam(required = false) String genre,
+                             @RequestParam(required = false) String type,
+                             @RequestParam(required = false) String sort,
+                             @RequestParam(defaultValue = "0") int page,
+                             Model model) {
+
+        Pageable pageable = PageRequest.of(page, 20);
+
+        // Truyền đủ các filter vào service
+        Page<MovieResponse> movies = movieService.filterMovies(genre, type, sort, pageable);
+
+        model.addAttribute("movies", movies);
+        model.addAttribute("genres", genreRepository.findAll());
+        model.addAttribute("types", MovieType.values());
+        model.addAttribute("years", List.of(2026, 2025, 2024, 2023, 2022));
+        model.addAttribute("pageTitle", genre != null ? "PHIM " + genre.toUpperCase() : "TẤT CẢ PHIM");
+
+        return "movie/list";
     }
 
     /* ══════════════════════════════════════

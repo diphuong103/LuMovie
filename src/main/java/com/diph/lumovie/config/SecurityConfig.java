@@ -24,6 +24,8 @@ public class SecurityConfig {
             "/movies/**",
             "/genres/**",
             "/error",
+            "/search",
+            "/list",
             "/dev/**", // thư mục dev
             "/css/**", "/js/**", "/images/**",  // cho phép load
             "/api/auth/**","/api/movies/**","/api/genres/**","/api/search/**","/api/watch/**",

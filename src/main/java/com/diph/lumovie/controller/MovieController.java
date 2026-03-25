@@ -35,7 +35,7 @@ public class MovieController {
     }
     @GetMapping("/trending") @Operation(summary = "Phim đang hot")
     public ResponseEntity<ApiResponse<List<MovieResponse>>> getTrending() {
-        return ResponseEntity.ok(ApiResponse.ok(movieService.getTrending()));
+        return ResponseEntity.ok(ApiResponse.ok(movieService.getTrending(PageRequest.of(0, 20))));
     }
     @GetMapping("/top-rated") @Operation(summary = "Phim đánh giá cao")
     public ResponseEntity<ApiResponse<List<MovieResponse>>> getTopRated() {
