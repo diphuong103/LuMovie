@@ -10,6 +10,7 @@ import com.diph.lumovie.security.JwtUtil;
 import com.diph.lumovie.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,29 +26,58 @@ public class AuthServiceImpl implements AuthService {
 
     @Override @Transactional
     public JwtResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        User user = userRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        // 1. Chủ động tìm User bằng cả Username HOẶC Email trước
+        User user = userRepository.findByUsername(request.getUsername())
+                .or(() -> userRepository.findByEmail(request.getUsername()))
+                .orElseThrow(() -> new ResourceNotFoundException("Tài khoản không tồn tại"));
+
+        try {
+            // 2. Xác thực bằng Username chuẩn từ DB (user.getUsername())
+            // để đảm bảo Spring Security tìm đúng record trong UserDetailsService
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), request.getPassword())
+            );
+        } catch (BadCredentialsException e) {
+            throw new RuntimeException("Mật khẩu không chính xác!");
+        }
+
+        // 3. Tạo Token
+        String token = jwtUtil.generateToken(user.getUsername());
+
         return JwtResponse.builder()
-            .accessToken(jwtUtil.generateToken(user.getEmail()))
-            .tokenType("Bearer")
-            .user(userMapper.toResponse(user)).build();
+                .accessToken(token)
+                .tokenType("Bearer")
+                .user(userMapper.toResponse(user))
+                .build();
     }
 
     @Override @Transactional
     public JwtResponse register(RegisterRequest request) {
+        // 1. Kiểm tra tồn tại
         if (userRepository.existsByEmail(request.getEmail())) throw new DuplicateEmailException(request.getEmail());
-        if (userRepository.existsByUsername(request.getUsername())) throw new BadRequestException("Username already taken");
+
+        // 2. Build user (tạm thời để fullName là null nếu request không có)
         User user = User.builder()
-            .username(request.getUsername()).email(request.getEmail())
-            .password(passwordEncoder.encode(request.getPassword()))
-            .fullName(request.getFullName()).build();
-        userRepository.save(user);
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .build();
+
+        // 3. Lưu lần đầu để lấy ID
+        user = userRepository.save(user);
+
+        // 4. Nếu fullName null, cộng ID vào để tạo chuỗi duy nhất
+        if (user.getFullName() == null || user.getFullName().isBlank()) {
+            user.setFullName("User_" + user.getId());
+            // Kết quả: User_1, User_2, User_100...
+        }
+
         return JwtResponse.builder()
-            .accessToken(jwtUtil.generateToken(user.getEmail()))
-            .tokenType("Bearer")
-            .user(userMapper.toResponse(user)).build();
+                .accessToken(jwtUtil.generateToken(user.getEmail()))
+                .tokenType("Bearer")
+                .user(userMapper.toResponse(user))
+                .build();
     }
 
     @Override

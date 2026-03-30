@@ -24,23 +24,37 @@
       <div>
         <h1 style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:5px;color:#e8b84b;margin-bottom:6px"
             th:text="${pageTitle ?: 'TẤT CẢ PHIM'}">TẤT CẢ PHIM</h1>
-        <!-- ✅ Fix lỗi 2: dùng totalElements thay vì size() -->
+
         <p style="font-size:0.83rem;color:#605848"
            th:text="${movies.totalElements} + ' bộ phim được tìm thấy'">0 bộ phim</p>
       </div>
 
       <!-- Sort dropdown -->
-      <form th:action="@{/movies}" method="get" style="display:flex;align-items:center;gap:10px">
-        <input type="hidden" name="type" th:value="${param.type}"/>
-        <input type="hidden" name="genre" th:value="${param.genre}"/>
-        <select name="sort" class="form-input" style="width:auto;padding:9px 36px 9px 14px;font-size:0.83rem"
-                onchange="this.form.submit()">
-          <option value="latest"   th:selected="${param.sort == 'latest'}">Mới Nhất</option>
-          <option value="topRated" th:selected="${param.sort == 'topRated'}">Đánh Giá Cao</option>
-          <option value="trending" th:selected="${param.sort == 'trending'}">Thịnh Hành</option>
-          <option value="viewCount" th:selected="${param.sort == 'viewCount'}">Xem Nhiều</option>
+<!--      <form th:action="@{/movies}" method="get" style="display:flex;align-items:center;gap:10px">-->
+<!--        <input type="hidden" name="type" th:value="${param.type}"/>-->
+<!--        <input type="hidden" name="genre" th:value="${param.genre}"/>-->
+<!--        <select name="sort" class="form-input" style="width:auto;padding:9px 36px 9px 14px;font-size:0.83rem"-->
+<!--                onchange="this.form.submit()">-->
+<!--          <option value="latest"   th:selected="${param.sort == 'latest'}">Mới Nhất</option>-->
+<!--          <option value="topRated" th:selected="${param.sort == 'topRated'}">Đánh Giá Cao</option>-->
+<!--          <option value="trending" th:selected="${param.sort == 'trending'}">Thịnh Hành</option>-->
+<!--          <option value="viewCount" th:selected="${param.sort == 'viewCount'}">Xem Nhiều</option>-->
+<!--        </select>-->
+<!--      </form>-->
+
+      <form th:action="@{/movies}" method="get" id="filterForm">
+        <input type="hidden" name="type" th:value="${type}"/>
+        <input type="hidden" name="genre" th:value="${genre}"/>
+
+        <select name="sort" class="form-input" onchange="this.form.submit()">
+          <option value="latest"   th:selected="${sort == 'latest'}">Mới Nhất</option>
+          <option value="topRated" th:selected="${sort == 'topRated'}">Đánh Giá Cao</option>
+          <option value="trending" th:selected="${sort == 'trending'}">Thịnh Hành</option>
+          <option value="viewCount" th:selected="${sort == 'viewCount'}">Xem Nhiều</option>
         </select>
       </form>
+
+
     </div>
 
     <div style="display:grid;grid-template-columns:240px 1fr;gap:32px;align-items:start">
@@ -49,7 +63,6 @@
       <aside>
         <form th:action="@{/movies}" method="get">
 
-          <!-- Loại phim — ✅ Fix lỗi 1: cấu trúc label đúng, đổi biến thành t -->
           <div class="card" style="margin-bottom:16px">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">Loại Phim</div>
             <div style="display:flex;flex-direction:column;gap:8px">
@@ -108,11 +121,11 @@
               </label>
               <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
                 <input type="radio" name="status" value="COMPLETED" th:checked="${param.status == 'COMPLETED'}" style="accent-color:#e8b84b"/>
-                <span style="font-size:0.83rem;color:#a09880">✅ Hoàn Thành</span>
+                <span style="font-size:0.83rem;color:#a09880">Hoàn Thành</span>
               </label>
               <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
                 <input type="radio" name="status" value="ONGOING" th:checked="${param.status == 'ONGOING'}" style="accent-color:#e8b84b"/>
-                <span style="font-size:0.83rem;color:#a09880">🔄 Đang Chiếu</span>
+                <span style="font-size:0.83rem;color:#a09880">Đang Chiếu</span>
               </label>
             </div>
           </div>
@@ -124,7 +137,7 @@
 
       <!-- ── MOVIE GRID ── -->
       <div>
-        <!-- ✅ Fix lỗi 3: dùng totalElements thay vì #lists.isEmpty -->
+
         <div th:if="${movies.totalElements == 0}" style="text-align:center;padding:80px 0">
           <div style="font-size:4rem;margin-bottom:16px">🎬</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#605848;margin-bottom:8px">KHÔNG TÌM THẤY PHIM</div>

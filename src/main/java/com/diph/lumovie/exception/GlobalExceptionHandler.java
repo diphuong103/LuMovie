@@ -39,4 +39,9 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error", ex);
         return ResponseEntity.internalServerError().body(ApiResponse.error("Internal server error"));
     }
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(org.springframework.security.authentication.BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Tên đăng nhập hoặc mật khẩu không chính xác!"));
+    }
 }

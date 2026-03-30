@@ -9,12 +9,17 @@
 <body>
 
 <!-- Full screen auth layout -->
-<div style="min-height:100vh;display:grid;grid-template-columns:1fr 1fr">
+<div class="auth-layout">
 
   <!-- LEFT — Cinematic panel -->
-  <div style="
+  <div class="auth-left" style="
     position:relative;overflow:hidden;
-    background:linear-gradient(135deg,#0a0a0e 0%,#1a0a2e 40%,#0a1a2e 100%);
+    background:
+      linear-gradient(135deg, rgba(10,10,14,0.92) 0%, rgba(10,26,46,0.92) 40%, rgba(26,10,46,0.92) 100%),
+      url('/images/bg_log.jpg');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding:60px;text-align:center">
 
@@ -37,14 +42,6 @@
       Hàng nghìn bộ phim &amp; anime<br>chất lượng cao, miễn phí
     </p>
 
-    <!-- Feature pills -->
-    <div style="position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;margin-top:48px">
-      <div th:each="feat : ${ {'🎬 Hàng nghìn bộ phim HD', '🎌 Anime mới nhất', '📱 Xem mọi thiết bị', '⭐ Đánh giá &amp; bình luận'} }"
-           style="display:flex;align-items:center;gap:10px;padding:10px 20px;
-                  background:rgba(200,146,42,0.06);border:1px solid rgba(200,146,42,0.15);
-                  border-radius:30px;font-size:0.83rem;color:#a09880"
-           th:text="${feat}">Feature</div>
-    </div>
 
     <!-- Decorative film strip bottom -->
     <div style="position:absolute;bottom:0;left:0;right:0;height:3px;
@@ -52,7 +49,7 @@
   </div>
 
   <!-- RIGHT — Login form -->
-  <div style="
+  <div class="auth-right" style="
     background:#0a0a0e;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding:60px 80px;position:relative">
@@ -81,39 +78,29 @@
         ✅ <span th:text="${success}">Đăng ký thành công! Hãy đăng nhập.</span>
       </div>
 
-      <!-- Login form (Spring Security) -->
-      <form th:action="@{/auth/login}" method="post">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+      <form id="loginForm">
+        <input type="hidden" id="csrfToken"
+               th:if="${_csrf != null}"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}" />
 
         <div class="form-group">
-          <label class="form-label" for="username">Email / Tên đăng nhập</label>
+          <label class="form-label" for="username">Tên đăng nhập / Email</label>
           <input type="text" id="username" name="username" class="form-input"
-                 placeholder="Nhập email hoặc username" autocomplete="username" required/>
+                 placeholder="Nhập email hoặc username" required/>
         </div>
 
         <div class="form-group">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <label class="form-label" for="password" style="margin-bottom:0">Mật Khẩu</label>
-            <a href="#" style="font-size:0.75rem;color:#605848;text-decoration:none;transition:color 0.2s"
-               onmouseover="this.style.color='#e8b84b'" onmouseout="this.style.color='#605848'">Quên mật khẩu?</a>
+            <label class="form-label" for="password">Mật Khẩu</label>
+            <a href="#" style="font-size:0.75rem;color:#605848;text-decoration:none;">Quên mật khẩu?</a>
           </div>
           <div style="position:relative">
             <input type="password" id="password" name="password" class="form-input"
-                   placeholder="Nhập mật khẩu" autocomplete="current-password" required
-                   style="padding-right:44px"/>
+                   placeholder="Nhập mật khẩu" required style="padding-right:44px"/>
             <button type="button" onclick="togglePassword('password')"
-                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
-                           background:none;border:none;color:#605848;cursor:pointer;font-size:1rem;
-                           transition:color 0.2s"
-                    onmouseover="this.style.color='#e8b84b'" onmouseout="this.style.color='#605848'">👁</button>
+                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#605848;cursor:pointer;">👁</button>
           </div>
-        </div>
-
-        <!-- Remember me -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:24px">
-          <input type="checkbox" id="remember-me" name="remember-me"
-                 style="width:16px;height:16px;accent-color:#e8b84b;cursor:pointer"/>
-          <label for="remember-me" style="font-size:0.83rem;color:#a09880;cursor:pointer">Ghi nhớ đăng nhập</label>
         </div>
 
         <button type="submit" class="btn btn-gold w-full btn-lg" style="justify-content:center;margin-bottom:16px">
@@ -156,5 +143,42 @@ function togglePassword(id) {
   el.type = el.type === 'password' ? 'text' : 'password';
 }
 </script>
+
+<script>
+  document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+      const res = await fetch("/api/auth/login", { // Kiểm tra kỹ đường dẫn này
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        const token = data.accessToken || data.data.accessToken;
+        // Lưu vào Cookie thay vì localStorage (hết hạn sau 1 ngày)
+        document.cookie = `accessToken=${token}; path=/; max-age=86400; SameSite=Strict`;
+
+        window.location.href = "/";
+      }else {
+        alert(data.message || "Đăng nhập thất bại!");
+      }
+    } catch (error) {
+      console.error("Lỗi kết nối:", error);
+      alert("Không thể kết nối đến máy chủ!");
+    }
+  });
+
+  function togglePassword(id) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
+  }
+</script>
+
 </body>
 </html>

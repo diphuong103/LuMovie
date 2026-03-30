@@ -4,6 +4,10 @@ spring:
   profiles:
     active: dev
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
   datasource:
     url: jdbc:mysql://localhost:3306/lumovie_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}

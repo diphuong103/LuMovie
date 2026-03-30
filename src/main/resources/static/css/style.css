@@ -989,3 +989,43 @@ textarea.form-input{resize:vertical;min-height:100px;}
   .movie-grid { gap: 8px; }
   .nav-logo   { font-size: 1.5rem; letter-spacing: 3px; }
 }
+
+.auth-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.auth-left {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-right {
+  background: #0a0a0e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+  position: relative;
+  overflow-y: auto;
+}
+
+/* MOBILE: ẩn left panel */
+@media (max-width: 768px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-left {
+    display: none !important;
+  }
+
+  .auth-right {
+    padding: 40px 20px !important;
+  }
+}

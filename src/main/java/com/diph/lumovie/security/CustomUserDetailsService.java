@@ -11,10 +11,16 @@ import java.util.List;
 public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        var user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
-        return new User(user.getEmail(), user.getPassword() != null ? user.getPassword() : "",
-            List.of(new SimpleGrantedAuthority(user.getRole().name())));
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        // Tìm bằng Email, nếu không thấy thì tìm bằng Username
+        var user = userRepository.findByEmail(identifier)
+                .or(() -> userRepository.findByUsername(identifier))
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng: " + identifier));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(), // Nên trả về Username chính thức của User
+                user.getPassword() != null ? user.getPassword() : "",
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())) // Thêm ROLE_ prefix nếu cần
+        );
     }
 }

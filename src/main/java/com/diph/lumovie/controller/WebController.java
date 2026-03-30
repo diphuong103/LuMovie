@@ -301,7 +301,22 @@ public class WebController {
         model.addAttribute("years", List.of(2026, 2025, 2024, 2023, 2022));
         model.addAttribute("pageTitle", genre != null ? "PHIM " + genre.toUpperCase() : "TẤT CẢ PHIM");
 
+        if ("MOVIE".equals(type)) model.addAttribute("currentPage", "movie");
+        else if ("SERIES".equals(type)) model.addAttribute("currentPage", "series");
+        else if ("ANIME".equals(type)) model.addAttribute("currentPage", "anime");
+        else if ("latest".equals(sort)) model.addAttribute("currentPage", "latest");
+
         return "movie/list";
+    }
+
+    @GetMapping("/auth/login")
+    public String loginPage() {
+        return "auth/login";
+    }
+
+    @GetMapping("/auth/register")
+    public String registerPage() {
+        return "auth/register";
     }
 
     /* ══════════════════════════════════════

@@ -50,14 +50,15 @@
     </p>
 
     <!-- Genre Pills -->
+
     <div class="animate-fadeup delay-3" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:700px;margin-bottom:48px">
-      <a th:href="@{/movies?genre='hanh-dong'}" class="genre-pill gp-1"><span>⚔ Hành Động</span></a>
-      <a th:href="@{/movies?genre='vien-tuong'}" class="genre-pill gp-2"><span>🚀 Viễn Tưởng</span></a>
-      <a th:href="@{/movies?genre='tinh-cam'}" class="genre-pill gp-3"><span>💕 Tình Cảm</span></a>
-      <a th:href="@{/movies?genre='phieu-luu'}" class="genre-pill gp-4"><span>🌿 Phiêu Lưu</span></a>
-      <a th:href="@{/movies?genre='hai-huoc'}" class="genre-pill gp-5"><span>😂 Hài Hước</span></a>
-      <a th:href="@{/movies?genre='kinh-di'}" class="genre-pill gp-6"><span>🔮 Kinh Dị</span></a>
-      <a th:href="@{/movies?type='ANIME'}" class="genre-pill gp-7"><span>🎌 Anime</span></a>
+      <a th:href="@{/movies(genre='hanh-dong')}" class="genre-pill gp-1"><span>⚔ Hành Động</span></a>
+      <a th:href="@{/movies(genre='vien-tuong')}" class="genre-pill gp-2"><span>🚀 Viễn Tưởng</span></a>
+      <a th:href="@{/movies(genre='tinh-cam')}" class="genre-pill gp-3"><span>💕 Tình Cảm</span></a>
+      <a th:href="@{/movies(genre='phieu-luu')}" class="genre-pill gp-4"><span>🌿 Phiêu Lưu</span></a>
+      <a th:href="@{/movies(genre='hai-huoc')}" class="genre-pill gp-5"><span>😂 Hài Hước</span></a>
+      <a th:href="@{/movies(genre='kinh-di')}" class="genre-pill gp-6"><span>🔮 Kinh Dị</span></a>
+      <a th:href="@{/movies(type='ANIME')}" class="genre-pill gp-7"><span>🎌 Anime</span></a>
     </div>
 
     <!-- Search -->
@@ -69,6 +70,44 @@
       </div>
     </form>
   </section>
+
+
+  <!-- ════════════════════════
+       THỂ LOẠI
+  ═════════════════════════ -->
+  <section class="section">
+    <div class="section-header">
+      <div class="section-title">🎭 Thể Loại</div>
+      <a th:href="@{/movies}" class="section-more">Xem tất cả →</a>
+    </div>
+
+    <div th:if="${genres != null and !#lists.isEmpty(genres)}"
+         class="carousel-outer" id="genre-outer">
+      <button class="carousel-btn carousel-btn-prev" onclick="slide('genre',-1)" id="genre-prev"><</button>
+      <div class="carousel-track-wrap">
+        <div class="carousel-track" id="genre-track">
+          <div th:each="genre,stat : ${genres}" class="genre-carousel-item">
+            <a th:href="@{/movies(genre=${genre.slug})}"
+               class="genre-card"
+               th:style="'border-color:' + ${genreColors[stat.index % genreColors.size()].border}
+                       + ';background:' + ${genreColors[stat.index % genreColors.size()].bg}">
+              <div class="genre-icon" th:text="${genre.icon != null ? genre.icon : '🎬'}">🎬</div>
+              <div class="genre-name" th:text="${genre.name}">Thể loại</div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-btn carousel-btn-next" onclick="slide('genre',1)" id="genre-next">></button>
+      <div class="carousel-dots" id="genre-dots"></div>
+    </div>
+
+    <div th:if="${genres == null or #lists.isEmpty(genres)}">
+      <p style="opacity:.7">Chưa có thể loại</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
 
   <!-- ════════════════════════
        FEATURED BANNER
@@ -144,41 +183,7 @@
 
   <div class="divider"></div>
 
-  <!-- ════════════════════════
-       THỂ LOẠI
-  ═════════════════════════ -->
-  <section class="section">
-    <div class="section-header">
-      <div class="section-title">🎭 Thể Loại</div>
-      <a th:href="@{/genres}" class="section-more">Xem tất cả →</a>
-    </div>
 
-    <div th:if="${genres != null and !#lists.isEmpty(genres)}"
-         class="carousel-outer" id="genre-outer">
-      <button class="carousel-btn carousel-btn-prev" onclick="slide('genre',-1)" id="genre-prev"><</button>
-      <div class="carousel-track-wrap">
-        <div class="carousel-track" id="genre-track">
-          <div th:each="genre,stat : ${genres}" class="genre-carousel-item">
-            <a th:href="@{/movies(genre=${genre.slug})}"
-               class="genre-card"
-               th:style="'border-color:' + ${genreColors[stat.index % genreColors.size()].border}
-                       + ';background:' + ${genreColors[stat.index % genreColors.size()].bg}">
-              <div class="genre-icon" th:text="${genre.icon != null ? genre.icon : '🎬'}">🎬</div>
-              <div class="genre-name" th:text="${genre.name}">Thể loại</div>
-            </a>
-          </div>
-        </div>
-      </div>
-      <button class="carousel-btn carousel-btn-next" onclick="slide('genre',1)" id="genre-next">></button>
-      <div class="carousel-dots" id="genre-dots"></div>
-    </div>
-
-    <div th:if="${genres == null or #lists.isEmpty(genres)}">
-      <p style="opacity:.7">Chưa có thể loại</p>
-    </div>
-  </section>
-
-  <div class="divider"></div>
 
   <!-- ════════════════════════
        MỚI NHẤT
@@ -186,7 +191,7 @@
   <section class="section">
     <div class="section-header">
       <div class="section-title">✨ Mới Cập Nhật</div>
-      <a th:href="@{/movies?sort='latest'}" class="section-more">Xem tất cả →</a>
+      <a th:href="@{/movies(sort='latest')}" class="section-more">Xem tất cả →</a>
     </div>
 
     <div th:if="${latestMovies != null and !#lists.isEmpty(latestMovies)}"
@@ -216,7 +221,7 @@
   <section class="section">
     <div class="section-header">
       <div class="section-title">⭐ Đánh Giá Cao Nhất</div>
-      <a th:href="@{/movies?sort='topRated'}" class="section-more">Xem tất cả →</a>
+      <a th:href="@{/movies(sort='topRated')}" class="section-more">Xem tất cả →</a>
     </div>
 
     <div th:if="${topRatedMovies != null and !#lists.isEmpty(topRatedMovies)}"

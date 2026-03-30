@@ -9,23 +9,24 @@
 
   <!-- NAV LINKS -->
   <ul class="nav-links">
-    <li><a th:href="@{/}"
-           th:classappend="${currentPage == 'home'} ? 'active'">Trang Chủ</a></li>
-    <li><a th:href="@{/movies?type='MOVIE'}"
+    <li><a th:href="@{/}" th:classappend="${currentPage == 'home'} ? 'active'">Trang Chủ</a></li>
+
+    <li><a th:href="@{/movies(type='MOVIE')}"
            th:classappend="${currentPage == 'movie'} ? 'active'">Phim Lẻ</a></li>
-    <li><a th:href="@{/movies?type='SERIES'}"
+
+    <li><a th:href="@{/movies(type='SERIES')}"
            th:classappend="${currentPage == 'series'} ? 'active'">Phim Bộ</a></li>
-    <li><a th:href="@{/movies?type='ANIME'}"
+
+    <li><a th:href="@{/movies(type='ANIME')}"
            th:classappend="${currentPage == 'anime'} ? 'active'">Anime</a></li>
-    <li><a th:href="@{/movies?type='TV_SHOW'}"
-           th:classappend="${currentPage == 'tvshow'} ? 'active'">TV Show</a></li>
-    <li><a th:href="@{/movies?sort='latest'}"
+
+    <li><a th:href="@{/movies(sort='latest')}"
            th:classappend="${currentPage == 'latest'} ? 'active'">Mới Nhất</a></li>
   </ul>
 
   <!-- RIGHT ACTIONS -->
   <div class="nav-right">
-    <a th:href="@{/search}" class="nav-icon-btn" title="Tìm kiếm">🔍</a>
+    <a th:href="@{/movies/search}" class="nav-icon-btn" title="Tìm kiếm">🔍</a>
 
     <!-- Not logged in -->
     <div sec:authorize="isAnonymous()">

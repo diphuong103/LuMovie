@@ -172,17 +172,18 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public Page<MovieResponse> filterMovies(String genre, String type, String sort, Pageable pageable) {
-        // 1. Tạo Specification (Điều kiện lọc động)
+    public Page<MovieResponse> filterMovies(String genre, String type, String sortKey, Pageable pageable) {
+        // 1. Tạo Specification
         Specification<Movie> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Lọc theo Thể loại (Genre Slug) - Join với bảng Genres
+            // Tránh lấy trùng lặp phim khi Join với bảng Genres
+            query.distinct(true);
+
             if (genre != null && !genre.isEmpty()) {
                 predicates.add(cb.equal(root.join("genres").get("slug"), genre));
             }
 
-            // Lọc theo Loại phim (MOVIE, SERIES, ANIME...)
             if (type != null && !type.isEmpty()) {
                 predicates.add(cb.equal(root.get("type"), type));
             }
@@ -190,14 +191,26 @@ public class MovieServiceImpl implements MovieService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        // 2. Xử lý Sắp xếp (Sort) thủ công nếu pageable chưa có sort
-        // Hoặc bạn có thể để Spring xử lý thông qua tham số sort trên URL
+        // 2. "Phiên dịch" Sort Key sang tên trường trong Entity
+        Sort sortOrder = Sort.by("createdAt").descending(); // Mặc định
+        if (sortKey != null) {
+            sortOrder = switch (sortKey) {
+                case "topRated" -> Sort.by("avgRating").descending();
+                case "trending", "viewCount" -> Sort.by("viewCount").descending();
+                default -> Sort.by("createdAt").descending();
+            };
+        }
 
-        // 3. Truy vấn Database với Spec và Pageable
-        Page<Movie> moviePage = movieRepository.findAll(spec, pageable);
+        // 3. Ghi đè lại Pageable với Sort mới đã phiên dịch
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                sortOrder
+        );
 
-        // 4. Map kết quả sang MovieResponse
-        return moviePage.map(movie -> movieMapper.toResponse(movie));
+        // 4. Truy vấn và Map kết quả
+        return movieRepository.findAll(spec, sortedPageable)
+                .map(movieMapper::toResponse);
     }
 
     private PageResponse<MovieResponse> toPageResponse(Page<Movie> page) {
