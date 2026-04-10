@@ -4,6 +4,7 @@ import com.diph.lumovie.enums.AuthProvider;
 import com.diph.lumovie.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity @Table(name = "users")
@@ -15,6 +16,8 @@ public class User extends BaseEntity {
     private String password;
     private String fullName;
     private String avatarUrl;
+    @Column(columnDefinition = "TEXT")
+    private String bio;
     @Builder.Default
     @Enumerated(EnumType.STRING) private Role role = Role.ROLE_USER;
     @Builder.Default
@@ -24,14 +27,16 @@ public class User extends BaseEntity {
     private boolean isActive = true;
     @Builder.Default
     private boolean emailVerified = false;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) private List<WatchHistory> watchHistories;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) private List<Watchlist> watchlist;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) private List<Rating> ratings;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) private List<Comment> comments;
+    private LocalDateTime lastLoginAt;
 
     @Builder.Default
     private boolean enabled = true;
 
     @Builder.Default
     private boolean accountNonLocked = true;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) private List<WatchHistory> watchHistories;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) private List<Watchlist> watchlist;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) private List<Rating> ratings;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL) private List<Comment> comments;
 }

@@ -16,6 +16,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
@@ -26,26 +28,29 @@ public class AuthServiceImpl implements AuthService {
 
     @Override @Transactional
     public JwtResponse login(LoginRequest request) {
-        // 1. Chủ động tìm User bằng cả Username HOẶC Email trước
+        // 1. Tìm user qua username hoặc email
         User user = userRepository.findByUsername(request.getUsername())
                 .or(() -> userRepository.findByEmail(request.getUsername()))
                 .orElseThrow(() -> new ResourceNotFoundException("Tài khoản không tồn tại"));
 
+        // 2. Xác thực password qua Spring Security
         try {
-            // 2. Xác thực bằng Username chuẩn từ DB (user.getUsername())
-            // để đảm bảo Spring Security tìm đúng record trong UserDetailsService
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(user.getUsername(), request.getPassword())
             );
         } catch (BadCredentialsException e) {
-            throw new RuntimeException("Mật khẩu không chính xác!");
+            throw new InvalidCredentialsException("Mật khẩu không chính xác!");
         }
 
-        // 3. Tạo Token
-        String token = jwtUtil.generateToken(user.getUsername());
+        // 3. Cập nhật lastLoginAt
+        user.setLastLoginAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // 4. Tạo token — LUÔN dùng username làm subject
+        String accessToken = jwtUtil.generateToken(user.getUsername());
 
         return JwtResponse.builder()
-                .accessToken(token)
+                .accessToken(accessToken)
                 .tokenType("Bearer")
                 .user(userMapper.toResponse(user))
                 .build();
@@ -53,10 +58,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override @Transactional
     public JwtResponse register(RegisterRequest request) {
-        // 1. Kiểm tra tồn tại
-        if (userRepository.existsByEmail(request.getEmail())) throw new DuplicateEmailException(request.getEmail());
+        // 1. Kiểm tra trùng email VÀ username
+        if (userRepository.existsByEmail(request.getEmail()))
+            throw new DuplicateEmailException(request.getEmail());
+        if (userRepository.existsByUsername(request.getUsername()))
+            throw new DuplicateResourceException("Username đã tồn tại: " + request.getUsername());
 
-        // 2. Build user (tạm thời để fullName là null nếu request không có)
+        // 2. Build và lưu user
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -64,24 +72,32 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(request.getFullName())
                 .build();
 
-        // 3. Lưu lần đầu để lấy ID
         user = userRepository.save(user);
 
-        // 4. Nếu fullName null, cộng ID vào để tạo chuỗi duy nhất
+        // 3. Tạo fullName mặc định nếu bỏ trống
         if (user.getFullName() == null || user.getFullName().isBlank()) {
             user.setFullName("User_" + user.getId());
-            // Kết quả: User_1, User_2, User_100...
+            userRepository.save(user);
         }
 
+        // 4. Token dùng username — nhất quán với login
+        String accessToken = jwtUtil.generateToken(user.getUsername());
+
         return JwtResponse.builder()
-                .accessToken(jwtUtil.generateToken(user.getEmail()))
+                .accessToken(accessToken)
                 .tokenType("Bearer")
                 .user(userMapper.toResponse(user))
                 .build();
     }
 
     @Override
-    public JwtResponse refreshToken(String refreshToken) { throw new UnsupportedOperationException("TODO"); }
+    public JwtResponse refreshToken(String refreshToken) {
+        throw new UnsupportedOperationException("Refresh token chưa được triển khai");
+    }
+
     @Override
-    public void logout(String refreshToken) { /* TODO: revoke token */ }
+    public void logout() {
+        // Cookie đã được xóa ở AuthController
+        // Có thể thêm logic revoke refresh token ở đây sau này
+    }
 }

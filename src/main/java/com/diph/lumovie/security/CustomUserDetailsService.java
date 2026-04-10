@@ -20,7 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(), // Nên trả về Username chính thức của User
                 user.getPassword() != null ? user.getPassword() : "",
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())) // Thêm ROLE_ prefix nếu cần
+                List.of(new SimpleGrantedAuthority(user.getRole().name()))
         );
     }
 }

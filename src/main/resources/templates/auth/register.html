@@ -9,7 +9,7 @@
 <body>
 <div class="auth-layout">
 
-  <!-- LEFT panel — same as login -->
+  <!-- LEFT panel -->
   <div class="auth-left" style="
     position:relative;overflow:hidden;
     background:
@@ -40,10 +40,6 @@
               font-size:1.1rem;color:#d0c8b8;line-height:1.6">
         Tạo tài khoản miễn phí<br>và bắt đầu xem ngay hôm nay
       </p>
-
-      <!-- Steps -->
-      <div style="margin-top:48px;display:flex;flex-direction:column;gap:16px;width:100%;max-width:280px">
-      </div>
     </div>
 
     <div style="position:absolute;bottom:0;left:0;right:0;height:3px;
@@ -61,44 +57,31 @@
         <p style="font-size:0.85rem;color:#605848">Hoàn toàn miễn phí — không cần thẻ tín dụng</p>
       </div>
 
-      <!-- Errors -->
-      <div th:if="${error}" class="alert alert-error" style="margin-bottom:20px">⚠️ <span th:text="${error}">Lỗi</span></div>
+      <!-- Error display -->
+      <div id="registerError" style="display:none;margin-bottom:20px;padding:12px 16px;border-radius:8px;background:rgba(232,64,85,0.1);border:1px solid rgba(232,64,85,0.3);color:#e84055;font-size:0.85rem">
+        ⚠️ <span id="registerErrorMsg">Lỗi</span>
+      </div>
 
       <form id="registerForm">
-          <input type="hidden"
-                 th:if="${_csrf != null}"
-                 th:name="${_csrf.parameterName}"
-                 th:value="${_csrf.token}" />
-
         <!-- Username -->
         <div class="form-group">
           <label class="form-label">Tên đăng nhập</label>
           <input type="text" name="username" class="form-input" id="username"
                  placeholder="Ít nhất 3 ký tự, không dấu cách"
-                 th:value="${registerRequest?.username}"
-                 th:classappend="${usernameError != null} ? ' error'"
                  minlength="3" maxlength="30" required/>
-          <div th:if="${usernameError}" class="form-error" th:text="${usernameError}">Lỗi</div>
-          <div id="usernameHint" class="form-hint" style="display:none"> Tên đăng nhập hợp lệ</div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Họ và tên</label>
           <input type="text" name="fullName" class="form-input" id="fullName"
-                 placeholder="Nhập tên đầy đủ của bạn"
-                 required/>
-          <div id="fullNameError" class="form-error" style="display:none">Họ tên không được để trống</div>
+                 placeholder="Nhập tên đầy đủ của bạn"/>
         </div>
 
         <!-- Email -->
         <div class="form-group">
           <label class="form-label">Email</label>
           <input type="email" name="email" class="form-input" id="email"
-                 placeholder="example@email.com"
-                 th:value="${registerRequest?.email}"
-                 th:classappend="${emailError != null} ? ' error'"
-                 required/>
-          <div th:if="${emailError}" class="form-error" th:text="${emailError}">Lỗi email</div>
+                 placeholder="example@email.com" required/>
         </div>
 
         <!-- Password -->
@@ -107,12 +90,10 @@
           <div style="position:relative">
             <input type="password" name="password" class="form-input" id="password"
                    placeholder="Ít nhất 6 ký tự"
-                   th:classappend="${passwordError != null} ? ' error'"
                    minlength="6" required style="padding-right:44px"/>
             <button type="button" onclick="togglePassword('password')"
                     style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#605848;cursor:pointer;font-size:1rem">👁</button>
           </div>
-          <div th:if="${passwordError}" class="form-error" th:text="${passwordError}">Lỗi mật khẩu</div>
           <!-- Strength indicator -->
           <div id="strengthBar" style="display:flex;gap:3px;margin-top:8px">
             <div id="s1" style="height:3px;flex:1;border-radius:2px;background:#202028;transition:background 0.3s"></div>
@@ -145,7 +126,7 @@
           </label>
         </div>
 
-        <button type="submit" class="btn btn-gold w-full btn-lg" style="justify-content:center;margin-bottom:16px">
+        <button type="submit" id="registerBtn" class="btn btn-gold w-full btn-lg" style="justify-content:center;margin-bottom:16px">
           Tạo Tài Khoản
         </button>
       </form>
@@ -207,60 +188,67 @@ document.getElementById('confirmPassword').addEventListener('input', function() 
   err.style.display = (this.value && this.value !== pass) ? 'block' : 'none';
 });
 
-// Prevent submit if passwords don't match
-document.getElementById('registerForm').addEventListener('submit', function(e) {
-  const p = document.getElementById('password').value;
-  const c = document.getElementById('confirmPassword').value;
-  if (p !== c) { e.preventDefault(); document.getElementById('matchError').style.display = 'block'; }
-});
-</script>
+// Single submit handler: validate + fetch + auto login
+document.getElementById("registerForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
 
-// Gửi dữ liệu json qua AuthController
-<script>
-  document.getElementById("registerForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
+  const username = document.getElementById("username").value.trim();
+  const fullName = document.getElementById("fullName").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  const btn = document.getElementById("registerBtn");
+  const errDiv = document.getElementById("registerError");
+  const errMsg = document.getElementById("registerErrorMsg");
 
-    const username = document.getElementById("username").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
+  // Validate password match
+  if (password !== confirmPassword) {
+    document.getElementById("matchError").style.display = "block";
+    return;
+  }
 
-    if (password !== confirmPassword) {
-      document.getElementById("matchError").style.display = "block";
-      return;
-    }
+  // Disable button
+  btn.disabled = true;
+  btn.textContent = "Đang tạo tài khoản...";
+  errDiv.style.display = "none";
 
-    const csrfInput = document.querySelector("input[name='_csrf']");
-    const csrfToken = csrfInput ? csrfInput.value : null;
-
+  try {
     const res = await fetch("/api/auth/register", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(csrfToken ? {"X-CSRF-TOKEN": csrfToken} : {})
-      },
-      body: JSON.stringify({
-        username: username,
-        email: email,
-        password: password
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password, fullName })
     });
 
-    const responseText = await res.text(); // Lấy text thô trước
-    let data = {};
-    try {
-      data = JSON.parse(responseText); // Thử parse JSON
-    } catch (e) {
-      console.error("Server trả về không phải JSON:", responseText);
-    }
+    const data = await res.json();
 
-    if (res.ok) {
-      alert("Đăng ký thành công!");
-      window.location.href = "/auth/login";
+    if (res.ok && data.success) {
+      // Đăng ký thành công → tự động đăng nhập
+      const token = data.data?.accessToken;
+      const user = data.data?.user;
+
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      }
+      if (user) {
+        localStorage.setItem("userInfo", JSON.stringify(user));
+      }
+
+      // Cookie đã được set bởi server (HttpOnly)
+      // Redirect về trang chủ
+      window.location.href = "/";
     } else {
-      alert(data.message || "Đăng ký thất bại!");
+      errMsg.textContent = data.message || "Đăng ký thất bại!";
+      errDiv.style.display = "block";
     }
-  });
+  } catch (error) {
+    console.error("Lỗi kết nối:", error);
+    errMsg.textContent = "Không thể kết nối đến máy chủ!";
+    errDiv.style.display = "block";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Tạo Tài Khoản";
+  }
+});
 </script>
 
 </body>

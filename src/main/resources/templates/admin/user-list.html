@@ -30,6 +30,11 @@
         </form>
       </div>
 
+      <!-- Success message -->
+      <div th:if="${success}" class="alert alert-success" style="margin-bottom:20px">
+        ✅ <span th:text="${success}">Thành công</span>
+      </div>
+
       <!-- Filter tabs -->
       <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
         <a th:href="@{/admin/users}" class="btn btn-sm"
@@ -85,23 +90,17 @@
                 </td>
                 <td>
                   <div style="display:flex;gap:6px">
-                    <!-- Toggle role -->
-                    <form th:action="@{/admin/users/{id}/toggle-role(id=${user.id})}" method="post" style="display:inline">
-                      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                      <button type="submit"
-                              title="Đổi vai trò"
-                              style="padding:4px 10px;border-radius:4px;background:rgba(200,146,42,0.1);border:1px solid rgba(200,146,42,0.2);color:#e8b84b;font-size:0.72rem;cursor:pointer">
-                        <span th:text="${user.role.name() == 'ROLE_USER' ? '👑' : '👤'}">👑</span>
-                      </button>
-                    </form>
-                    <!-- Toggle lock -->
-                    <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" method="post" style="display:inline">
-                      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                      <button type="submit"
-                              style="padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.72rem;
-                                     background:rgba(232,64,85,0.1);border:1px solid rgba(232,64,85,0.2);color:#e84055"
-                              th:text="${user.enabled ? '🔒' : '🔓'}">🔒</button>
-                    </form>
+                    <!-- Toggle role via JS -->
+                    <button onclick="toggleRole(this)" th:data-id="${user.id}"
+                            title="Đổi vai trò"
+                            style="padding:4px 10px;border-radius:4px;background:rgba(200,146,42,0.1);border:1px solid rgba(200,146,42,0.2);color:#e8b84b;font-size:0.72rem;cursor:pointer">
+                      <span th:text="${user.role.name() == 'ROLE_USER' ? '👑' : (user.role.name() == 'ROLE_VIP' ? '⚙️' : '👤')}">👑</span>
+                    </button>
+                    <!-- Toggle lock via JS -->
+                    <button onclick="toggleStatus(this)" th:data-id="${user.id}"
+                            style="padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.72rem;
+                                   background:rgba(232,64,85,0.1);border:1px solid rgba(232,64,85,0.2);color:#e84055"
+                            th:text="${user.enabled ? '🔒' : '🔓'}">🔒</button>
                   </div>
                 </td>
               </tr>
@@ -114,7 +113,7 @@
 
         <!-- Pagination -->
         <div class="pagination" style="margin-top:24px">
-          <a th:if="${users.hasPreviousPage()}"
+          <a th:if="${users.hasPrevious()}"
              th:href="@{/admin/users(page=${users.number-1},q=${param.q},role=${param.role})}"
              class="page-btn">‹</a>
           <a th:each="i : ${#numbers.sequence(0,users.totalPages-1)}"
@@ -122,7 +121,7 @@
              th:href="@{/admin/users(page=${i},q=${param.q},role=${param.role})}"
              class="page-btn" th:classappend="${i == users.number} ? ' active'"
              th:text="${i+1}">1</a>
-          <a th:if="${users.hasNextPage()}"
+          <a th:if="${users.hasNext()}"
              th:href="@{/admin/users(page=${users.number+1},q=${param.q},role=${param.role})}"
              class="page-btn">›</a>
         </div>
@@ -130,5 +129,31 @@
     </main>
   </div>
 </div>
+
+<script>
+async function toggleRole(btn) {
+  const id = btn.dataset.id;
+  try {
+    const res = await fetch('/admin/users/' + id + '/toggle-role', { method: 'POST' });
+    if (res.ok || res.redirected) {
+      window.location.reload();
+    } else {
+      alert('Đổi vai trò thất bại!');
+    }
+  } catch(e) { alert('Lỗi kết nối'); }
+}
+
+async function toggleStatus(btn) {
+  const id = btn.dataset.id;
+  try {
+    const res = await fetch('/admin/users/' + id + '/toggle-status', { method: 'POST' });
+    if (res.ok || res.redirected) {
+      window.location.reload();
+    } else {
+      alert('Thao tác thất bại!');
+    }
+  } catch(e) { alert('Lỗi kết nối'); }
+}
+</script>
 </body>
 </html>

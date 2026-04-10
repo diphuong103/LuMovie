@@ -3,6 +3,12 @@ spring:
     name: LuMovie
   profiles:
     active: dev
+    mvc:
+      favicon:
+        enabled: false
+    logging:
+      level:
+        org.springframework.web.servlet.resource: WARN
 
   jackson:
     serialization:

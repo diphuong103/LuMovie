@@ -16,7 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration @EnableWebSecurity @EnableMethodSecurity @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JwtAuthFilter jwtAuthFilter;  // Lấy token từ header sau đó nếu hợp lệ thì đăng nhập user
+    private final JwtAuthFilter jwtAuthFilter;  // Lấy token từ cookie/header → nếu hợp lệ thì đăng nhập user
 
     // Các trang public không cần login vẫn cho xem phim
     private static final String[] PUBLIC = {
@@ -26,23 +26,33 @@ public class SecurityConfig {
             "/error",
             "/search",
             "/list",
-            "/dev/**", // thư mục dev
-            "/css/**", "/js/**", "/images/**",  // cho phép load
+            "/dev/**",
+            "/css/**", "/js/**", "/images/**",
             "/auth/**",
             "/api/auth/**","/api/movies/**","/api/genres/**","/api/search/**","/api/watch/**",
-        "/swagger-ui/**","/v3/api-docs/**","/actuator/**"  //swagger-ui (giao diện web hiển thị danh sách API và cho phép test trực tiếp).
+            "/swagger-ui/**","/v3/api-docs/**","/actuator/**"
     };
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.csrf(c -> c.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
-                .requestMatchers(PUBLIC).permitAll() //(cho phép mọi người truy cập, không cần đăng nhập)
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers(PUBLIC).permitAll()
+                // Admin pages + API
+                .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                // Tất cả còn lại cần đăng nhập (profile, watchlist, etc.)
                 .anyRequest().authenticated())
+            .logout(l -> l
+                .logoutUrl("/auth/logout")
+                .logoutSuccessUrl("/")
+                .deleteCookies("accessToken")
+            )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
+
     @Bean public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
     @Bean public AuthenticationManager authenticationManager(AuthenticationConfiguration c) throws Exception { return c.getAuthenticationManager(); }
 }
