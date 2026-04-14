@@ -37,7 +37,21 @@ public class JwtUtil {
     }
 
     public boolean validateToken(String token) {
-        try { Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token); return true; }
-        catch (JwtException | IllegalArgumentException e) { log.error("Invalid JWT: {}", e.getMessage()); return false; }
+        try {
+            Jwts.parserBuilder().setSigningKey(key()).build().parseClaimsJws(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            // Chỉ log ở mức WARN hoặc INFO vì hết hạn là chuyện bình thường
+            log.warn("JWT expired: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.error("Invalid JWT format: {}", e.getMessage());
+        } catch (SignatureException e) {
+            log.error("Invalid JWT signature: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.error("JWT error: {}", e.getMessage());
+        }
+        return false;
     }
 }

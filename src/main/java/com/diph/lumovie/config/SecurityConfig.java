@@ -42,6 +42,7 @@ public class SecurityConfig {
                 // Admin pages + API
                 .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
                 .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
+                    .requestMatchers("/api/auth/me").authenticated()
                 // Tất cả còn lại cần đăng nhập (profile, watchlist, etc.)
                 .anyRequest().authenticated())
             .logout(l -> l

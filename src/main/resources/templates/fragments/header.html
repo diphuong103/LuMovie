@@ -26,7 +26,39 @@
 
   <!-- RIGHT ACTIONS -->
   <div class="nav-right">
-    <a th:href="@{/search}" class="nav-icon-btn" title="Tìm kiếm">🔍</a>
+    <!-- Search -->
+    <div class="nav-search" style="position:relative">
+      <button onclick="toggleSearch()" class="nav-icon-btn" title="Tìm kiếm"
+              style="background:none;border:none;cursor:pointer;font-size:16px">🔍</button>
+
+      <div id="searchPopup" style="
+    display:none;position:absolute;top:44px;right:0;
+    background:#141419;border:1px solid rgba(200,146,42,0.2);
+    border-radius:12px;width:320px;padding:12px;
+    box-shadow:0 16px 48px rgba(0,0,0,0.6);z-index:200;">
+        <form th:action="@{/search}" method="get" style="display:flex;gap:8px;align-items:center">
+          <input type="text" name="q" id="searchInput"
+                 placeholder="Tìm kiếm phim..."
+                 autofocus
+                 style="flex:1;padding:8px 12px;border-radius:8px;
+                    border:1px solid rgba(200,146,42,0.3);
+                    background:#0a0a0e;color:#e8e0d0;font-size:0.85rem;outline:none"/>
+          <button type="submit" style="
+        padding:8px 12px;border-radius:8px;border:none;
+        background:linear-gradient(135deg,#c8922a,#e8b84b);
+        color:#0a0a0e;font-weight:700;cursor:pointer;font-size:0.85rem">
+            Tìm
+          </button>
+        </form>
+        <div style="margin-top:8px;text-align:right">
+          <a th:href="@{/search}" style="font-size:0.75rem;color:#605848;text-decoration:none"
+             onmouseover="this.style.color='#e8b84b'"
+             onmouseout="this.style.color='#605848'">
+            Tìm kiếm nâng cao →
+          </a>
+        </div>
+      </div>
+    </div>
 
     <!-- Not logged in -->
     <div sec:authorize="isAnonymous()">
@@ -40,12 +72,13 @@
 
       <div class="user-menu" style="position:relative">
         <div class="user-avatar" onclick="toggleUserMenu()" style="
-          width:36px;height:36px;border-radius:50%;
-          background:linear-gradient(135deg,#c8922a,#e8b84b);
-          display:flex;align-items:center;justify-content:center;
-          font-weight:700;font-size:0.88rem;color:#0a0a0e;
-          cursor:pointer;border:2px solid rgba(200,146,42,0.4);">
-          <span sec:authentication="name">U</span>
+    width:36px;height:36px;border-radius:50%;
+    background:linear-gradient(135deg,#c8922a,#e8b84b);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:0.88rem;color:#0a0a0e;
+    cursor:pointer;border:2px solid rgba(200,146,42,0.4);
+    overflow:hidden;flex-shrink:0;user-select:none;">
+          <span th:text="${#strings.substring(#authentication.name, 0, 1).toUpperCase()}">U</span>
         </div>
 
         <div id="userDropdown" style="
@@ -65,12 +98,12 @@
              onmouseout="this.style.background='';this.style.color='#a09880'">
             <span>👤</span> Trang Cá Nhân
           </a>
-          <a th:href="@{/profile}" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.83rem;color:#a09880;text-decoration:none;transition:all 0.15s"
+          <a th:href="@{/favorites}" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.83rem;color:#a09880;text-decoration:none;transition:all 0.15s"
              onmouseover="this.style.background='rgba(200,146,42,0.06)';this.style.color='#e8b84b'"
              onmouseout="this.style.background='';this.style.color='#a09880'">
             <span>❤️</span> Danh Sách Yêu Thích
           </a>
-          <a th:href="@{/profile}" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.83rem;color:#a09880;text-decoration:none;transition:all 0.15s"
+          <a th:href="@{/history}" style="display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:0.83rem;color:#a09880;text-decoration:none;transition:all 0.15s"
              onmouseover="this.style.background='rgba(200,146,42,0.06)';this.style.color='#e8b84b'"
              onmouseout="this.style.background='';this.style.color='#a09880'">
             <span>📺</span> Lịch Sử Xem
@@ -101,26 +134,58 @@
   </div>
 
   <script>
+    // =============================================
+    // AUTH UTILITIES
+    // =============================================
+
+    async function doLogout() {
+      try {
+        const res = await fetch('/api/auth/logout', { method: 'POST' });
+        if (!res.ok) console.warn('Logout API failed:', res.status);
+      } catch (e) {
+        console.error('Logout error:', e);
+      }
+      // Cookie HttpOnly đã được server xóa, chỉ cần redirect
+      window.location.href = '/';
+    }
+
+    // =============================================
+    // UI: USER MENU
+    // =============================================
+
     function toggleUserMenu() {
       const d = document.getElementById('userDropdown');
-      d.style.display = d.style.display === 'none' ? 'block' : 'none';
+      if (d) d.style.display = d.style.display === 'none' ? 'block' : 'none';
     }
+
     document.addEventListener('click', e => {
       if (!e.target.closest('.user-menu')) {
         const d = document.getElementById('userDropdown');
         if (d) d.style.display = 'none';
       }
     });
-    async function doLogout() {
-      try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-      } catch(e) { /* ignore */ }
-      // Xóa localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('userInfo');
-      // Redirect
-      window.location.href = '/auth/logout';
+
+    // =============================================
+    // UI: SEARCH POPUP
+    // =============================================
+
+    function toggleSearch() {
+      const popup = document.getElementById('searchPopup');
+      if (!popup) return;
+      const isHidden = popup.style.display === 'none';
+      popup.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        setTimeout(() => document.getElementById('searchInput')?.focus(), 50);
+      }
     }
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.nav-search')) {
+        const popup = document.getElementById('searchPopup');
+        if (popup) popup.style.display = 'none';
+      }
+    });
   </script>
+
 </nav>
 </html>

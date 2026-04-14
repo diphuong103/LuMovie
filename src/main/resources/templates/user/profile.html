@@ -41,18 +41,22 @@
           <span th:if="${user.role.name() == 'ROLE_ADMIN'}" class="badge badge-purple">⚙️ Admin</span>
         </div>
         <p style="font-size:0.85rem;color:#605848;margin-bottom:4px" th:text="${user.email}">email@example.com</p>
-        <p th:if="${user.fullName != null}" style="font-size:0.85rem;color:#a09880;margin-bottom:12px" th:text="${user.fullName}">Full Name</p>
+        <p th:if="${user.fullName != null}" style="font-size:0.85rem;color:#a09880;margin-bottom:12px"
+           th:text="${user.fullName}">Full Name</p>
         <div style="display:flex;gap:24px;flex-wrap:wrap">
           <div style="text-align:center">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#e8b84b" th:text="${watchlistCount ?: 0}">0</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#e8b84b"
+                 th:text="${watchlistCount ?: 0}">0</div>
             <div style="font-size:0.72rem;color:#605848">Danh Sách</div>
           </div>
           <div style="text-align:center">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#e8b84b" th:text="${historyCount ?: 0}">0</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#e8b84b"
+                 th:text="${historyCount ?: 0}">0</div>
             <div style="font-size:0.72rem;color:#605848">Đã Xem</div>
           </div>
           <div style="text-align:center">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#e8b84b" th:text="${ratingCount ?: 0}">0</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#e8b84b"
+                 th:text="${ratingCount ?: 0}">0</div>
             <div style="font-size:0.72rem;color:#605848">Đánh Giá</div>
           </div>
         </div>
@@ -63,89 +67,122 @@
     </div>
 
     <!-- Tabs -->
-    <div style="display:flex;gap:4px;background:#141419;border:1px solid rgba(200,146,42,0.1);border-radius:12px;padding:4px;margin-bottom:28px;width:fit-content">
+    <div style="display:flex;gap:4px;background:#141419;border:1px solid rgba(200,146,42,0.1);border-radius:12px;
+                padding:4px;margin-bottom:28px;width:fit-content">
       <button onclick="showTab('watchlist')" id="tab-watchlist"
-              style="padding:9px 20px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all 0.2s;background:linear-gradient(135deg,#c8922a,#e8b84b);color:#0a0a0e">❤️ Yêu Thích</button>
+              style="padding:9px 20px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;border:none;
+                     font-family:'DM Sans',sans-serif;transition:all 0.2s;
+                     background:linear-gradient(135deg,#c8922a,#e8b84b);color:#0a0a0e">❤️ Yêu Thích</button>
       <button onclick="showTab('history')" id="tab-history"
-              style="padding:9px 20px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all 0.2s;background:transparent;color:#605848">📺 Lịch Sử</button>
+              style="padding:9px 20px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;border:none;
+                     font-family:'DM Sans',sans-serif;transition:all 0.2s;background:transparent;color:#605848">📺 Lịch Sử</button>
       <button onclick="showTab('settings')" id="tab-settings"
-              style="padding:9px 20px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all 0.2s;background:transparent;color:#605848">⚙️ Cài Đặt</button>
+              style="padding:9px 20px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;border:none;
+                     font-family:'DM Sans',sans-serif;transition:all 0.2s;background:transparent;color:#605848">⚙️ Cài Đặt</button>
     </div>
 
-    <!-- WATCHLIST TAB -->
+    <!-- ══════════════ WATCHLIST TAB ══════════════ -->
     <div id="panel-watchlist">
-      <div th:if="${watchlist.empty}" style="text-align:center;padding:60px 0">
+
+      <!-- FIX: Empty state hiển thị đúng khi watchlist trống -->
+      <div th:if="${#lists.isEmpty(watchlist)}" style="text-align:center;padding:60px 0">
         <div style="font-size:3rem;margin-bottom:12px">❤️</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#605848">DANH SÁCH TRỐNG</div>
         <p style="font-size:0.83rem;color:#605848;margin:8px 0 20px">Hãy thêm phim yêu thích vào đây</p>
         <a th:href="@{/movies}" class="btn btn-gold">🎬 Khám Phá Phim</a>
       </div>
-      <div th:unless="${watchlist.empty}" class="movie-grid">
+
+      <!-- FIX: movie-grid bao đúng th:each, items render BÊN TRONG grid -->
+      <div th:unless="${#lists.isEmpty(watchlist)}" class="movie-grid">
         <div th:each="item : ${watchlist}"
              th:replace="~{fragments/movie-card :: card(movie=${item.movie})}"></div>
       </div>
+
     </div>
 
-    <!-- HISTORY TAB -->
+    <!-- ══════════════ HISTORY TAB ══════════════ -->
     <div id="panel-history" style="display:none">
-      <div th:if="${history.empty}" style="text-align:center;padding:60px 0">
+
+      <!-- FIX: Empty state hiển thị đúng khi history trống -->
+      <div th:if="${#lists.isEmpty(history)}" style="text-align:center;padding:60px 0">
         <div style="font-size:3rem;margin-bottom:12px">📺</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#605848">CHƯA XEM PHIM NÀO</div>
         <p style="font-size:0.83rem;color:#605848;margin:8px 0 20px">Bắt đầu xem phim và lịch sử sẽ xuất hiện ở đây</p>
         <a th:href="@{/movies}" class="btn btn-gold">🎬 Xem Phim Ngay</a>
       </div>
-      <div th:unless="${history.empty}">
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div th:each="item : ${history}"
-               style="display:flex;gap:16px;background:#141419;border:1px solid rgba(200,146,42,0.1);border-radius:12px;padding:16px;align-items:center">
-            <div style="width:64px;height:96px;border-radius:8px;overflow:hidden;flex-shrink:0">
-              <img th:if="${item.episode != null and item.episode.movie != null and item.episode.movie.posterUrl != null}"
-                   th:src="${item.episode.movie.posterUrl}" style="width:100%;height:100%;object-fit:cover"/>
-              <div th:unless="${item.episode != null and item.episode.movie != null and item.episode.movie.posterUrl != null}"
-                   style="width:100%;height:100%;background:#1a1a22;display:flex;align-items:center;justify-content:center">🎬</div>
-            </div>
-            <div style="flex:1">
-              <a th:if="${item.episode != null and item.episode.movie != null}"
-                 th:href="@{/movies/{slug}(slug=${item.episode.movie.slug})}"
-                 style="font-weight:600;color:#e8e0d0;font-size:0.92rem;text-decoration:none"
-                 th:text="${item.episode.movie.title}">Tên Phim</a>
-              <div style="font-size:0.75rem;color:#605848;margin-top:4px"
-                   th:text="'Xem lúc: ' + ${#temporals.format(item.watchedAt,'dd/MM/yyyy HH:mm')}">Thời gian</div>
-              <div th:if="${item.episode != null}" style="font-size:0.75rem;color:#a09880;margin-top:2px"
-                   th:text="'Tập ' + ${item.episode.episodeNumber}">Tập 1</div>
-            </div>
-            <a th:if="${item.episode != null and item.episode.movie != null}"
-               th:href="@{/movies/{slug}/watch(slug=${item.episode.movie.slug})}" class="btn btn-gold btn-sm">▶ Xem Tiếp</a>
+
+      <!-- FIX: history list bao đúng th:each -->
+      <div th:unless="${#lists.isEmpty(history)}"
+           style="display:flex;flex-direction:column;gap:12px">
+        <div th:each="item : ${history}"
+             style="display:flex;gap:16px;background:#141419;border:1px solid rgba(200,146,42,0.1);
+                    border-radius:12px;padding:16px;align-items:center">
+          <div style="width:64px;height:96px;border-radius:8px;overflow:hidden;flex-shrink:0">
+            <!-- FIX: truy cập episode.movie qua item.episode (đã JOIN FETCH trong repository) -->
+            <img th:if="${item.episode != null and item.episode.movie != null and item.episode.movie.posterUrl != null}"
+                 th:src="${item.episode.movie.posterUrl}"
+                 style="width:100%;height:100%;object-fit:cover"
+                 th:alt="${item.episode.movie.title}"/>
+            <div th:unless="${item.episode != null and item.episode.movie != null and item.episode.movie.posterUrl != null}"
+                 style="width:100%;height:100%;background:#1a1a22;display:flex;align-items:center;justify-content:center">🎬</div>
           </div>
+          <div style="flex:1;min-width:0">
+            <a th:if="${item.episode != null and item.episode.movie != null}"
+               th:href="@{/movies/{slug}(slug=${item.episode.movie.slug})}"
+               style="font-weight:600;color:#e8e0d0;font-size:0.92rem;text-decoration:none;
+                      display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+               th:text="${item.episode.movie.title}">Tên Phim</a>
+            <div style="font-size:0.75rem;color:#605848;margin-top:4px"
+                 th:text="'Xem lúc: ' + ${#temporals.format(item.watchedAt,'dd/MM/yyyy HH:mm')}">Thời gian</div>
+            <div th:if="${item.episode != null}"
+                 style="font-size:0.75rem;color:#a09880;margin-top:2px"
+                 th:text="'Tập ' + ${item.episode.episodeNumber}">Tập 1</div>
+          </div>
+          <a th:if="${item.episode != null and item.episode.movie != null}"
+             th:href="@{/movies/{slug}/watch(slug=${item.episode.movie.slug},ep=${item.episode.episodeNumber})}"
+             class="btn btn-gold btn-sm">▶ Xem Tiếp</a>
         </div>
       </div>
+
     </div>
 
-    <!-- SETTINGS TAB -->
+    <!-- ══════════════ SETTINGS TAB ══════════════ -->
     <div id="panel-settings" style="display:none;max-width:560px">
 
       <!-- Flash messages -->
-      <div th:if="${profileSuccess}" class="alert alert-success" style="margin-bottom:16px">✅ <span th:text="${profileSuccess}">Cập nhật thành công</span></div>
-      <div th:if="${passwordSuccess}" class="alert alert-success" style="margin-bottom:16px">✅ <span th:text="${passwordSuccess}">Đổi mật khẩu thành công</span></div>
-      <div th:if="${passwordError}" class="alert alert-error" style="margin-bottom:16px">⚠️ <span th:text="${passwordError}">Lỗi</span></div>
+      <div th:if="${profileSuccess}" class="alert alert-success" style="margin-bottom:16px">
+        ✅ <span th:text="${profileSuccess}">Cập nhật thành công</span>
+      </div>
+      <div th:if="${passwordSuccess}" class="alert alert-success" style="margin-bottom:16px">
+        ✅ <span th:text="${passwordSuccess}">Đổi mật khẩu thành công</span>
+      </div>
+      <div th:if="${passwordError}" class="alert alert-error" style="margin-bottom:16px">
+        ⚠️ <span th:text="${passwordError}">Lỗi</span>
+      </div>
 
       <!-- Update profile -->
       <div class="card" style="margin-bottom:20px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:20px">👤 Thông Tin Cá Nhân</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:20px">
+          👤 Thông Tin Cá Nhân
+        </div>
         <form action="/profile/update" method="post">
           <div class="form-group">
             <label class="form-label">Họ và Tên</label>
-            <input type="text" name="fullName" class="form-input" th:value="${user.fullName}" placeholder="Nhập họ và tên"/>
+            <input type="text" name="fullName" class="form-input"
+                   th:value="${user.fullName}" placeholder="Nhập họ và tên"/>
           </div>
           <div class="form-group">
             <label class="form-label">Email</label>
-            <input type="email" class="form-input" th:value="${user.email}" placeholder="Email" disabled
+            <input type="email" class="form-input" th:value="${user.email}"
+                   placeholder="Email" disabled
                    style="opacity:0.5;cursor:not-allowed"/>
             <div style="font-size:0.72rem;color:#605848;margin-top:4px">Email không thể thay đổi</div>
           </div>
           <div class="form-group">
             <label class="form-label">Bio</label>
-            <textarea name="bio" class="form-input" rows="3" placeholder="Giới thiệu bản thân..." th:text="${user.bio}"></textarea>
+            <textarea name="bio" class="form-input" rows="3"
+                      placeholder="Giới thiệu bản thân..."
+                      th:text="${user.bio}"></textarea>
           </div>
           <button type="submit" class="btn btn-gold">💾 Lưu Thay Đổi</button>
         </form>
@@ -153,51 +190,61 @@
 
       <!-- Change password -->
       <div class="card">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:20px">🔐 Đổi Mật Khẩu</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:3px;color:#e8b84b;margin-bottom:20px">
+          🔐 Đổi Mật Khẩu
+        </div>
         <form action="/profile/change-password" method="post">
           <div class="form-group">
             <label class="form-label">Mật Khẩu Hiện Tại</label>
-            <input type="password" name="currentPassword" class="form-input" placeholder="Nhập mật khẩu hiện tại" required/>
+            <input type="password" name="currentPassword" class="form-input"
+                   placeholder="Nhập mật khẩu hiện tại" required/>
           </div>
           <div class="form-group">
             <label class="form-label">Mật Khẩu Mới</label>
-            <input type="password" name="newPassword" class="form-input" placeholder="Ít nhất 6 ký tự" required minlength="6"/>
+            <input type="password" name="newPassword" class="form-input"
+                   placeholder="Ít nhất 6 ký tự" required minlength="6"/>
           </div>
           <div class="form-group">
             <label class="form-label">Xác Nhận Mật Khẩu Mới</label>
-            <input type="password" name="confirmPassword" class="form-input" placeholder="Nhập lại mật khẩu mới" required/>
+            <input type="password" name="confirmPassword" class="form-input"
+                   placeholder="Nhập lại mật khẩu mới" required/>
           </div>
           <button type="submit" class="btn btn-outline">🔒 Đổi Mật Khẩu</button>
         </form>
       </div>
+
     </div>
+
   </div>
 </div>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 
 <script>
-function showTab(name) {
-  ['watchlist','history','settings'].forEach(t => {
-    document.getElementById('panel-' + t).style.display = t === name ? 'block' : 'none';
-    const btn = document.getElementById('tab-' + t);
-    if (t === name) {
-      btn.style.background = 'linear-gradient(135deg,#c8922a,#e8b84b)';
-      btn.style.color = '#0a0a0e';
-    } else {
-      btn.style.background = 'transparent';
-      btn.style.color = '#605848';
+  function showTab(name) {
+    ['watchlist', 'history', 'settings'].forEach(t => {
+      document.getElementById('panel-' + t).style.display = t === name ? 'block' : 'none';
+      const btn = document.getElementById('tab-' + t);
+      if (t === name) {
+        btn.style.background = 'linear-gradient(135deg,#c8922a,#e8b84b)';
+        btn.style.color = '#0a0a0e';
+      } else {
+        btn.style.background = 'transparent';
+        btn.style.color = '#605848';
+      }
+    });
+  }
+
+  // FIX: auto-show đúng tab dựa trên loại flash message
+  document.addEventListener('DOMContentLoaded', function () {
+    const hasProfileFlash  = /*[[${profileSuccess}]]*/  null;
+    const hasPasswordFlash = /*[[${passwordSuccess}]]*/  null;
+    const hasPasswordError = /*[[${passwordError}]]*/    null;
+
+    if (hasProfileFlash || hasPasswordFlash || hasPasswordError) {
+      showTab('settings');
     }
   });
-}
-
-// Auto show settings tab if there's a flash message
-document.addEventListener('DOMContentLoaded', function() {
-  const hasFlash = document.querySelector('.alert');
-  if (hasFlash && document.getElementById('panel-settings')) {
-    showTab('settings');
-  }
-});
 </script>
 </body>
 </html>

@@ -41,7 +41,8 @@
         <div class="stat-card" style="border-color:rgba(16,185,129,0.25)">
           <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#10b981,#34d399)"></div>
           <div style="font-size:1.6rem;margin-bottom:8px">👁</div>
-          <div class="stat-num" style="color:#34d399" th:text="${#numbers.formatInteger(totalViews ?: 0,1,'COMMA')}">0</div>
+          <div class="stat-num" style="color:#34d399"
+               th:text="${#numbers.formatInteger((totalViews ?: 0), 1, 'COMMA')}">0</div>
           <div class="stat-label">Lượt Xem</div>
           <div class="stat-change stat-up">↑ Tháng này</div>
         </div>
@@ -116,7 +117,7 @@
                     </div>
                   </td>
                 </tr>
-                <tr th:if="${recentMovies == null or recentMovies.empty}">
+                <tr th:if="${#lists.isEmpty(recentMovies)}">
                   <td colspan="6" style="text-align:center;padding:32px;color:#605848">Chưa có phim nào</td>
                 </tr>
               </tbody>
@@ -153,7 +154,10 @@
                 </div>
                 <span th:if="${user.role.name() == 'ROLE_VIP'}" style="font-size:0.65rem;padding:2px 6px;border-radius:4px;background:rgba(200,146,42,0.15);color:#e8b84b">VIP</span>
               </div>
-              <div th:if="${recentUsers == null or recentUsers.empty}" style="text-align:center;color:#605848;font-size:0.82rem;padding:16px 0">Chưa có user mới</div>
+              <div th:if="${#lists.isEmpty(recentUsers)}"
+                   style="text-align:center;color:#605848;font-size:0.82rem;padding:16px 0">
+                Chưa có user mới
+              </div>
             </div>
           </div>
         </div>

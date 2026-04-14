@@ -98,7 +98,6 @@
           <!-- Watchlist (đăng nhập) -->
           <div sec:authorize="isAuthenticated()">
             <form th:action="@{/watchlist/toggle}" method="post">
-              <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
               <input type="hidden" name="movieId" th:value="${movie.id}"/>
               <button type="submit" class="btn btn-ghost btn-lg"
                       th:text="${inWatchlist ? '❤️ Đã Lưu' : '🤍 Lưu Phim'}">🤍 Lưu Phim</button>
@@ -164,7 +163,6 @@
           <p class="rating-prompt">Đánh giá của bạn:</p>
           <form th:action="@{/movies/{id}/rate(id=${movie.id})}" method="post"
                 class="rating-form">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <div class="star-rating">
               <th:block th:each="i : ${#numbers.sequence(5,1,-1)}">
                 <input type="radio" name="rating" th:value="${i}"
@@ -194,7 +192,6 @@
         <!-- Form bình luận — đã đăng nhập -->
         <div sec:authorize="isAuthenticated()" class="comment-form-wrap">
           <form th:action="@{/movies/{id}/comment(id=${movie.id})}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
             <textarea name="content" class="form-input"
                       placeholder="Viết bình luận của bạn..." rows="3"></textarea>
             <button type="submit" class="btn btn-gold btn-sm">📤 Gửi Bình Luận</button>

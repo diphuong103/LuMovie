@@ -104,26 +104,33 @@
                   </div>
                 </td>
               </tr>
-              <tr th:if="${users.empty}">
-                <td colspan="7" style="text-align:center;padding:40px;color:#605848">Không tìm thấy user nào</td>
+              <tr th:if="${users.totalElements == 0}">
+                <td colspan="5" style="text-align:center; padding:20px; color:#605848">
+                  Không tìm thấy người dùng nào.
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <!-- Pagination -->
-        <div class="pagination" style="margin-top:24px">
+        <div class="pagination" style="margin-top:24px" th:if="${users.totalPages > 0}">
+
           <a th:if="${users.hasPrevious()}"
-             th:href="@{/admin/users(page=${users.number-1},q=${param.q},role=${param.role})}"
+             th:href="@{/admin/users(page=${users.number - 1}, q=${param.q}, role=${param.role})}"
              class="page-btn">‹</a>
-          <a th:each="i : ${#numbers.sequence(0,users.totalPages-1)}"
-             th:if="${i >= users.number - 2 and i <= users.number + 2}"
-             th:href="@{/admin/users(page=${i},q=${param.q},role=${param.role})}"
-             class="page-btn" th:classappend="${i == users.number} ? ' active'"
-             th:text="${i+1}">1</a>
+
+          <a th:each="i : ${#numbers.sequence(0, (users.totalPages > 0 ? users.totalPages - 1 : 0))}"
+             th:if="${i >= (users.number - 2) and i <= (users.number + 2)}"
+             th:href="@{/admin/users(page=${i}, q=${param.q}, role=${param.role})}"
+             class="page-btn"
+             th:classappend="${i == users.number} ? ' active'"
+             th:text="${i + 1}">1</a>
+
           <a th:if="${users.hasNext()}"
-             th:href="@{/admin/users(page=${users.number+1},q=${param.q},role=${param.role})}"
+             th:href="@{/admin/users(page=${users.number + 1}, q=${param.q}, role=${param.role})}"
              class="page-btn">›</a>
+
         </div>
       </div>
     </main>

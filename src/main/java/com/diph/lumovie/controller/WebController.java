@@ -7,7 +7,6 @@ import com.diph.lumovie.enums.Role;
 import com.diph.lumovie.repository.*;
 import com.diph.lumovie.service.MovieService;
 import com.diph.lumovie.service.UserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -82,7 +81,6 @@ public class WebController {
 
     @GetMapping("/auth/logout")
     public String logoutPage(HttpServletResponse response) {
-        // Xóa cookie accessToken
         ResponseCookie cookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true).path("/").maxAge(0).sameSite("Lax").build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -97,26 +95,20 @@ public class WebController {
                               Model model,
                               Authentication auth) {
         try {
-            // 1. Thông tin phim
             MovieResponse movie = movieService.getBySlug(slug);
             model.addAttribute("movie", movie);
 
-            // 2. Tăng lượt xem
             movieService.incrementView(movie.getId());
 
-            // 3. Phim liên quan
             model.addAttribute("relatedMovies",
                     movieService.getRelated(movie.getId(), 6));
 
-            // 4. Bình luận
             model.addAttribute("comments",
                     commentRepository.findByMovieIdOrderByCreatedAtDesc(movie.getId()));
 
-            // 5. Rating count
             model.addAttribute("ratingCount",
                     ratingRepository.findByMovieId(movie.getId()).size());
 
-            // 6. Data cho user đã đăng nhập
             boolean loggedIn = auth != null
                     && auth.isAuthenticated()
                     && !(auth instanceof AnonymousAuthenticationToken);
@@ -155,7 +147,13 @@ public class WebController {
                              @RequestParam String content,
                              @RequestParam(required = false) String redirect,
                              Authentication auth) {
-        if (auth == null) return "redirect:/auth/login";
+        if (auth == null || auth instanceof AnonymousAuthenticationToken)
+            return "redirect:/auth/login";
+
+        // FIX: kiểm tra content không rỗng trước khi lưu
+        if (content == null || content.isBlank())
+            return "redirect:/movies/" + movieRepository.findById(id)
+                    .map(Movie::getSlug).orElse("") + "#comments";
 
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         Movie movie = movieRepository.findById(id).orElseThrow();
@@ -183,7 +181,8 @@ public class WebController {
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
             return "redirect:/auth/login";
 
-        if (rating < 1 || rating > 5) rating = 1;
+        // FIX: clamp rating về [1, 5] thay vì chỉ set 1
+        rating = Math.max(1, Math.min(5, rating));
 
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         Movie movie = movieRepository.findById(id).orElseThrow();
@@ -231,7 +230,10 @@ public class WebController {
                 );
 
         String referer = request.getHeader("Referer");
-        return "redirect:" + (referer != null ? referer : "/");
+        // FIX: fallback an toàn hơn về trang chi tiết phim nếu không có Referer
+        return "redirect:" + (referer != null && !referer.isBlank()
+                ? referer
+                : "/movies/" + movie.getSlug());
     }
 
     /* ══════════════════════════════════════
@@ -241,7 +243,8 @@ public class WebController {
     @Transactional
     public String watchMovie(@PathVariable String slug,
                              @RequestParam(defaultValue = "1") int ep,
-                             Model model) {
+                             Model model,
+                             Authentication auth) {   // FIX: thêm Authentication để lưu watch history
 
         MovieResponse movie = movieService.getBySlug(slug);
         model.addAttribute("movie", movie);
@@ -273,6 +276,37 @@ public class WebController {
         model.addAttribute("recommended", movieService.getRelated(movie.getId(), 6));
         movieService.incrementView(movie.getId());
 
+        // FIX: lưu watch history cho user đã đăng nhập
+        if (auth != null && auth.isAuthenticated()
+                && !(auth instanceof AnonymousAuthenticationToken)
+                && currentEpisode != null) {
+            try {
+                User user = userRepository.findByUsername(auth.getName()).orElse(null);
+                if (user != null) {
+                    // Upsert: nếu đã có thì cập nhật watchedAt, chưa có thì tạo mới
+                    WatchHistory existing = watchHistoryRepository
+                            .findByUserIdAndEpisodeId(user.getId(), currentEpisode.getId())
+                            .orElse(null);
+                    if (existing != null) {
+                        existing.setWatchedAt(LocalDateTime.now());
+                        watchHistoryRepository.save(existing);
+                    } else {
+                        WatchHistory wh = WatchHistory.builder()
+                                .user(user)
+                                .episode(currentEpisode)
+                                .progressSeconds(0)
+                                .completed(false)
+                                .watchedAt(LocalDateTime.now())
+                                .build();
+                        watchHistoryRepository.save(wh);
+                    }
+                }
+            } catch (Exception e) {
+                // Không để lỗi history làm hỏng trang xem phim
+                e.printStackTrace();
+            }
+        }
+
         String epLabel = currentEpisode != null
                 ? "Tập " + currentEpisode.getEpisodeNumber() : "Phim Lẻ";
         model.addAttribute("epLabel", epLabel);
@@ -300,11 +334,12 @@ public class WebController {
             model.addAttribute("hasPrev",      page > 0);
             model.addAttribute("hasNext",      page < searchResults.getTotalPages() - 1);
         } else {
-            Page<MovieResponse> trending = (Page<MovieResponse>) movieService.getTrending(PageRequest.of(0, 20));
-            model.addAttribute("movies", trending.getContent());
+            List<MovieResponse> trending = movieService.getTrending(PageRequest.of(0, 20));
+            model.addAttribute("movies", trending);
         }
 
-        if (auth != null && auth.isAuthenticated()) {
+        if (auth != null && auth.isAuthenticated()
+                && !(auth instanceof AnonymousAuthenticationToken)) {
             model.addAttribute("user", auth.getPrincipal());
         }
 
@@ -330,10 +365,10 @@ public class WebController {
         model.addAttribute("years", List.of(2026, 2025, 2024, 2023, 2022));
         model.addAttribute("pageTitle", genre != null ? "PHIM " + genre.toUpperCase() : "TẤT CẢ PHIM");
 
-        if ("MOVIE".equals(type)) model.addAttribute("currentPage", "movie");
-        else if ("SERIES".equals(type)) model.addAttribute("currentPage", "series");
-        else if ("ANIME".equals(type)) model.addAttribute("currentPage", "anime");
-        else if ("latest".equals(sort)) model.addAttribute("currentPage", "latest");
+        if ("MOVIE".equals(type))        model.addAttribute("currentPage", "movie");
+        else if ("SERIES".equals(type))  model.addAttribute("currentPage", "series");
+        else if ("ANIME".equals(type))   model.addAttribute("currentPage", "anime");
+        else if ("latest".equals(sort))  model.addAttribute("currentPage", "latest");
 
         return "movie/list";
     }
@@ -349,21 +384,12 @@ public class WebController {
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         model.addAttribute("user", user);
 
-        // Stats
-        long watchlistCount = watchlistRepository.countByUserId(user.getId());
-        long historyCount = watchHistoryRepository.countByUserId(user.getId());
-        long ratingCount = ratingRepository.countByUserId(user.getId());
-        model.addAttribute("watchlistCount", watchlistCount);
-        model.addAttribute("historyCount", historyCount);
-        model.addAttribute("ratingCount", ratingCount);
+        model.addAttribute("watchlistCount", watchlistRepository.countByUserId(user.getId()));
+        model.addAttribute("historyCount",   watchHistoryRepository.countByUserId(user.getId()));
+        model.addAttribute("ratingCount",    ratingRepository.countByUserId(user.getId()));
 
-        // Watchlist data
-        List<Watchlist> watchlist = watchlistRepository.findByUserIdOrderByAddedAtDesc(user.getId());
-        model.addAttribute("watchlist", watchlist);
-
-        // History data
-        List<WatchHistory> history = watchHistoryRepository.findByUserIdWithMovieOrderByWatchedAtDesc(user.getId());
-        model.addAttribute("history", history);
+        model.addAttribute("watchlist", watchlistRepository.findByUserIdOrderByAddedAtDesc(user.getId()));
+        model.addAttribute("history",   watchHistoryRepository.findByUserIdWithMovieOrderByWatchedAtDesc(user.getId()));
 
         return "user/profile";
     }
@@ -373,11 +399,12 @@ public class WebController {
                                 @RequestParam(required = false) String bio,
                                 Authentication auth,
                                 RedirectAttributes redirect) {
-        if (auth == null) return "redirect:/auth/login";
+        if (auth == null || auth instanceof AnonymousAuthenticationToken)
+            return "redirect:/auth/login";
 
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         if (fullName != null) user.setFullName(fullName.trim());
-        if (bio != null) user.setBio(bio.trim());
+        if (bio != null)      user.setBio(bio.trim());
         userRepository.save(user);
 
         redirect.addFlashAttribute("profileSuccess", "Cập nhật thông tin thành công!");
@@ -390,7 +417,8 @@ public class WebController {
                                  @RequestParam String confirmPassword,
                                  Authentication auth,
                                  RedirectAttributes redirect) {
-        if (auth == null) return "redirect:/auth/login";
+        if (auth == null || auth instanceof AnonymousAuthenticationToken)
+            return "redirect:/auth/login";
 
         if (!newPassword.equals(confirmPassword)) {
             redirect.addFlashAttribute("passwordError", "Mật khẩu xác nhận không khớp!");
@@ -417,26 +445,23 @@ public class WebController {
     ══════════════════════════════════════ */
     @GetMapping("/admin")
     public String adminDashboard(Model model) {
-        // Stats
-        model.addAttribute("totalMovies", movieRepository.count());
-        model.addAttribute("totalUsers", userRepository.count());
+        model.addAttribute("totalMovies",   movieRepository.count());
+        model.addAttribute("totalUsers",    userRepository.count());
         model.addAttribute("totalComments", commentRepository.count());
 
-        // Tổng lượt xem
         long totalViews = movieRepository.findAll().stream()
                 .mapToLong(m -> m.getViewCount() != null ? m.getViewCount() : 0)
                 .sum();
         model.addAttribute("totalViews", totalViews);
 
-        // Thống kê tháng này
-        LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-        model.addAttribute("newUsersThisMonth", userRepository.countByCreatedAtAfter(startOfMonth));
+        LocalDateTime startOfMonth = LocalDateTime.now()
+                .withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        model.addAttribute("newUsersThisMonth",  userRepository.countByCreatedAtAfter(startOfMonth));
         model.addAttribute("newMoviesThisMonth", movieRepository.countByCreatedAtAfter(startOfMonth));
 
-        // Recent movies & users
         model.addAttribute("recentMovies", movieRepository.findAll(
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent());
-        model.addAttribute("recentUsers", userRepository.findTop10ByOrderByCreatedAtDesc());
+        model.addAttribute("recentUsers",  userRepository.findTop10ByOrderByCreatedAtDesc());
 
         return "admin/dashboard";
     }
@@ -475,15 +500,15 @@ public class WebController {
     public String toggleUserRole(@PathVariable Long id, RedirectAttributes redirect) {
         User user = userRepository.findById(id).orElseThrow();
 
-        // Cycle: ROLE_USER → ROLE_VIP → ROLE_ADMIN → ROLE_USER
         switch (user.getRole()) {
-            case ROLE_USER -> user.setRole(Role.ROLE_VIP);
-            case ROLE_VIP -> user.setRole(Role.ROLE_ADMIN);
+            case ROLE_USER  -> user.setRole(Role.ROLE_VIP);
+            case ROLE_VIP   -> user.setRole(Role.ROLE_ADMIN);
             case ROLE_ADMIN -> user.setRole(Role.ROLE_USER);
         }
         userRepository.save(user);
 
-        redirect.addFlashAttribute("success", "Đã đổi vai trò của " + user.getUsername() + " thành " + user.getRole().name());
+        redirect.addFlashAttribute("success",
+                "Đã đổi vai trò của " + user.getUsername() + " thành " + user.getRole().name());
         return "redirect:/admin/users";
     }
 
@@ -495,19 +520,14 @@ public class WebController {
         userRepository.save(user);
 
         String status = user.isEnabled() ? "mở khóa" : "khóa";
-        redirect.addFlashAttribute("success", "Đã " + status + " tài khoản " + user.getUsername());
+        redirect.addFlashAttribute("success",
+                "Đã " + status + " tài khoản " + user.getUsername());
         return "redirect:/admin/users";
     }
 
     /* ══════════════════════════════════════
        HELPERS
     ══════════════════════════════════════ */
-    private String resolveSlugRedirect(Long movieId) {
-        return movieRepository.findById(movieId)
-                .map(m -> "/movies/" + m.getSlug())
-                .orElse("/");
-    }
-
     private List<Map<String, String>> genreColors() {
         return List.of(
                 Map.of("bg", "rgba(239,68,68,0.08)",  "border", "rgba(239,68,68,0.2)"),
