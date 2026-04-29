@@ -13,21 +13,24 @@ import java.util.Optional;
 public interface WatchHistoryRepository extends JpaRepository<WatchHistory, Long> {
 
     /**
-     * FIX: JOIN FETCH cả episode VÀ episode.movie để tránh LazyInitializationException
-     * khi Thymeleaf truy cập item.episode.movie.posterUrl, item.episode.movie.slug, v.v.
+     * FIX: JOIN FETCH cả episode VÀ episode.movie để tránh
+     * LazyInitializationException
+     * khi Thymeleaf truy cập item.episode.movie.posterUrl, item.episode.movie.slug,
+     * v.v.
      */
     @Query("""
             SELECT wh FROM WatchHistory wh
             JOIN FETCH wh.episode e
             JOIN FETCH e.movie
             WHERE wh.user.id = :userId
-            ORDER BY wh.watchedAt DESC
+            ORDER BY wh.lastWatchedTime DESC
             """)
-    List<WatchHistory> findByUserIdWithMovieOrderByWatchedAtDesc(@Param("userId") Long userId);
+    List<WatchHistory> findByUserIdWithMovieOrderByLastWatchedTimeDesc(@Param("userId") Long userId);
 
     /**
      * FIX: cần thêm method này để WebController có thể upsert watch history
-     * (cập nhật watchedAt nếu user đã xem tập này rồi, thay vì tạo bản ghi trùng lặp)
+     * (cập nhật lastWatchedTime nếu user đã xem tập này rồi, thay vì tạo bản ghi
+     * trùng lặp)
      */
     Optional<WatchHistory> findByUserIdAndEpisodeId(Long userId, Long episodeId);
 

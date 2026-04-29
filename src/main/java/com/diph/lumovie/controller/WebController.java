@@ -7,6 +7,7 @@ import com.diph.lumovie.enums.Role;
 import com.diph.lumovie.repository.*;
 import com.diph.lumovie.service.MovieService;
 import com.diph.lumovie.service.UserService;
+import com.diph.lumovie.service.WatchHistoryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -43,32 +44,37 @@ public class WebController {
     private final RatingRepository ratingRepository;
     private final WatchlistRepository watchlistRepository;
     private final WatchHistoryRepository watchHistoryRepository;
+    private final WatchHistoryService watchHistoryService;
     private final GenreRepository genreRepository;
     private final UserRepository userRepository;
     private final MovieRepository movieRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /* ══════════════════════════════════════
-       HOME PAGE
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * HOME PAGE
+     * ══════════════════════════════════════
+     */
     @GetMapping("/")
     public String home(Model model) {
         try {
             model.addAttribute("trendingMovies", movieService.getTrending(PageRequest.of(0, 20)));
-            model.addAttribute("latestMovies",   movieService.getLatest());
+            model.addAttribute("latestMovies", movieService.getLatest());
             model.addAttribute("topRatedMovies", movieService.getTopRated());
-            model.addAttribute("featuredMovie",  movieService.getFeatured());
-            model.addAttribute("genres",         movieService.getAllGenres());
-            model.addAttribute("genreColors",    genreColors());
+            model.addAttribute("featuredMovie", movieService.getFeatured());
+            model.addAttribute("genres", movieService.getAllGenres());
+            model.addAttribute("genreColors", genreColors());
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "index";
     }
 
-    /* ══════════════════════════════════════
-       AUTH PAGES
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * AUTH PAGES
+     * ══════════════════════════════════════
+     */
     @GetMapping("/auth/login")
     public String loginPage() {
         return "auth/login";
@@ -87,13 +93,15 @@ public class WebController {
         return "redirect:/";
     }
 
-    /* ══════════════════════════════════════
-       MOVIE DETAIL PAGE
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * MOVIE DETAIL PAGE
+     * ══════════════════════════════════════
+     */
     @GetMapping("/movies/{slug}")
     public String movieDetail(@PathVariable String slug,
-                              Model model,
-                              Authentication auth) {
+            Model model,
+            Authentication auth) {
         try {
             MovieResponse movie = movieService.getBySlug(slug);
             model.addAttribute("movie", movie);
@@ -139,14 +147,16 @@ public class WebController {
         return "movie/detail";
     }
 
-    /* ══════════════════════════════════════
-       POST: Bình luận
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * POST: Bình luận
+     * ══════════════════════════════════════
+     */
     @PostMapping("/movies/{id}/comment")
     public String addComment(@PathVariable Long id,
-                             @RequestParam String content,
-                             @RequestParam(required = false) String redirect,
-                             Authentication auth) {
+            @RequestParam String content,
+            @RequestParam(required = false) String redirect,
+            Authentication auth) {
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
             return "redirect:/auth/login";
 
@@ -170,13 +180,15 @@ public class WebController {
         return "redirect:/movies/" + movie.getSlug() + "#comments";
     }
 
-    /* ══════════════════════════════════════
-       POST: Đánh giá
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * POST: Đánh giá
+     * ══════════════════════════════════════
+     */
     @PostMapping("/movies/{id}/rate")
     public String rateMovie(@PathVariable Long id,
-                            @RequestParam int rating,
-                            Authentication auth) {
+            @RequestParam int rating,
+            Authentication auth) {
 
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
             return "redirect:/auth/login";
@@ -204,13 +216,15 @@ public class WebController {
         return "redirect:/movies/" + movie.getSlug() + "#rating";
     }
 
-    /* ══════════════════════════════════════
-       POST: Toggle Watchlist
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * POST: Toggle Watchlist
+     * ══════════════════════════════════════
+     */
     @PostMapping("/watchlist/toggle")
     public String toggleWatchlist(@RequestParam Long movieId,
-                                  Authentication auth,
-                                  HttpServletRequest request) {
+            Authentication auth,
+            HttpServletRequest request) {
 
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
             return "redirect:/auth/login";
@@ -226,8 +240,7 @@ public class WebController {
                             w.setMovie(movie);
                             w.setUser(user);
                             watchlistRepository.save(w);
-                        }
-                );
+                        });
 
         String referer = request.getHeader("Referer");
         // FIX: fallback an toàn hơn về trang chi tiết phim nếu không có Referer
@@ -236,15 +249,17 @@ public class WebController {
                 : "/movies/" + movie.getSlug());
     }
 
-    /* ══════════════════════════════════════
-       WATCH PAGE
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * WATCH PAGE
+     * ══════════════════════════════════════
+     */
     @GetMapping("/movies/{slug}/watch")
     @Transactional
     public String watchMovie(@PathVariable String slug,
-                             @RequestParam(defaultValue = "1") int ep,
-                             Model model,
-                             Authentication auth) {   // FIX: thêm Authentication để lưu watch history
+            @RequestParam(defaultValue = "1") int ep,
+            Model model,
+            Authentication auth) { // FIX: thêm Authentication để lưu watch history
 
         MovieResponse movie = movieService.getBySlug(slug);
         model.addAttribute("movie", movie);
@@ -283,20 +298,20 @@ public class WebController {
             try {
                 User user = userRepository.findByUsername(auth.getName()).orElse(null);
                 if (user != null) {
-                    // Upsert: nếu đã có thì cập nhật watchedAt, chưa có thì tạo mới
+                    // Upsert: nếu đã có thì cập nhật lastWatchedTime, chưa có thì tạo mới
                     WatchHistory existing = watchHistoryRepository
                             .findByUserIdAndEpisodeId(user.getId(), currentEpisode.getId())
                             .orElse(null);
                     if (existing != null) {
-                        existing.setWatchedAt(LocalDateTime.now());
+                        existing.setLastWatchedTime(LocalDateTime.now());
                         watchHistoryRepository.save(existing);
                     } else {
                         WatchHistory wh = WatchHistory.builder()
                                 .user(user)
                                 .episode(currentEpisode)
-                                .progressSeconds(0)
-                                .completed(false)
-                                .watchedAt(LocalDateTime.now())
+                                .duration(0L)
+                                .isCompleted(false)
+                                .lastWatchedTime(LocalDateTime.now())
                                 .build();
                         watchHistoryRepository.save(wh);
                     }
@@ -308,31 +323,34 @@ public class WebController {
         }
 
         String epLabel = currentEpisode != null
-                ? "Tập " + currentEpisode.getEpisodeNumber() : "Phim Lẻ";
+                ? "Tập " + currentEpisode.getEpisodeNumber()
+                : "Phim Lẻ";
         model.addAttribute("epLabel", epLabel);
 
         return "movie/watch";
     }
 
-    /* ══════════════════════════════════════
-       SEARCH
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * SEARCH
+     * ══════════════════════════════════════
+     */
     @GetMapping("/search")
     public String searchMovie(@RequestParam(name = "q", required = false) String query,
-                              @RequestParam(defaultValue = "0") int page,
-                              Model model,
-                              Authentication auth) {
+            @RequestParam(defaultValue = "0") int page,
+            Model model,
+            Authentication auth) {
 
         if (query != null && !query.isBlank()) {
             Pageable pageable = PageRequest.of(page, 10);
             Page<MovieResponse> searchResults = movieService.searchPage(query, pageable);
 
-            model.addAttribute("movies",       searchResults.getContent());
-            model.addAttribute("totalItems",   searchResults.getTotalElements());
-            model.addAttribute("totalPages",   searchResults.getTotalPages());
-            model.addAttribute("currentPage",  page);
-            model.addAttribute("hasPrev",      page > 0);
-            model.addAttribute("hasNext",      page < searchResults.getTotalPages() - 1);
+            model.addAttribute("movies", searchResults.getContent());
+            model.addAttribute("totalItems", searchResults.getTotalElements());
+            model.addAttribute("totalPages", searchResults.getTotalPages());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("hasPrev", page > 0);
+            model.addAttribute("hasNext", page < searchResults.getTotalPages() - 1);
         } else {
             List<MovieResponse> trending = movieService.getTrending(PageRequest.of(0, 20));
             model.addAttribute("movies", trending);
@@ -346,15 +364,17 @@ public class WebController {
         return "movie/search";
     }
 
-    /* ══════════════════════════════════════
-       MOVIE LIST + FILTER
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * MOVIE LIST + FILTER
+     * ══════════════════════════════════════
+     */
     @GetMapping("/movies")
     public String listMovies(@RequestParam(required = false) String genre,
-                             @RequestParam(required = false) String type,
-                             @RequestParam(required = false) String sort,
-                             @RequestParam(defaultValue = "0") int page,
-                             Model model) {
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
 
         Pageable pageable = PageRequest.of(page, 20);
         Page<MovieResponse> movies = movieService.filterMovies(genre, type, sort, pageable);
@@ -365,17 +385,23 @@ public class WebController {
         model.addAttribute("years", List.of(2026, 2025, 2024, 2023, 2022));
         model.addAttribute("pageTitle", genre != null ? "PHIM " + genre.toUpperCase() : "TẤT CẢ PHIM");
 
-        if ("MOVIE".equals(type))        model.addAttribute("currentPage", "movie");
-        else if ("SERIES".equals(type))  model.addAttribute("currentPage", "series");
-        else if ("ANIME".equals(type))   model.addAttribute("currentPage", "anime");
-        else if ("latest".equals(sort))  model.addAttribute("currentPage", "latest");
+        if ("MOVIE".equals(type))
+            model.addAttribute("currentPage", "movie");
+        else if ("SERIES".equals(type))
+            model.addAttribute("currentPage", "series");
+        else if ("ANIME".equals(type))
+            model.addAttribute("currentPage", "anime");
+        else if ("latest".equals(sort))
+            model.addAttribute("currentPage", "latest");
 
         return "movie/list";
     }
 
-    /* ══════════════════════════════════════
-       PROFILE PAGE
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * PROFILE PAGE
+     * ══════════════════════════════════════
+     */
     @GetMapping("/profile")
     public String profilePage(Model model, Authentication auth) {
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
@@ -384,39 +410,56 @@ public class WebController {
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
         model.addAttribute("user", user);
 
+        List<WatchHistory> historyList = watchHistoryService.getDistinctUserHistory(user.getId());
         model.addAttribute("watchlistCount", watchlistRepository.countByUserId(user.getId()));
-        model.addAttribute("historyCount",   watchHistoryRepository.countByUserId(user.getId()));
-        model.addAttribute("ratingCount",    ratingRepository.countByUserId(user.getId()));
+        model.addAttribute("historyCount", historyList.size());
+        model.addAttribute("ratingCount", ratingRepository.countByUserId(user.getId()));
 
         model.addAttribute("watchlist", watchlistRepository.findByUserIdOrderByAddedAtDesc(user.getId()));
-        model.addAttribute("history",   watchHistoryRepository.findByUserIdWithMovieOrderByWatchedAtDesc(user.getId()));
+        model.addAttribute("history", historyList);
 
         return "user/profile";
     }
 
     @PostMapping("/profile/update")
     public String updateProfile(@RequestParam(required = false) String fullName,
-                                @RequestParam(required = false) String bio,
-                                Authentication auth,
-                                RedirectAttributes redirect) {
+            @RequestParam(required = false) String bio,
+            Authentication auth,
+            RedirectAttributes redirect) {
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
             return "redirect:/auth/login";
 
         User user = userRepository.findByUsername(auth.getName()).orElseThrow();
-        if (fullName != null) user.setFullName(fullName.trim());
-        if (bio != null)      user.setBio(bio.trim());
+        if (fullName != null)
+            user.setFullName(fullName.trim());
+        if (bio != null)
+            user.setBio(bio.trim());
         userRepository.save(user);
 
         redirect.addFlashAttribute("profileSuccess", "Cập nhật thông tin thành công!");
         return "redirect:/profile";
     }
 
+    @GetMapping("/history")
+    public String historyPage(Model model, Authentication auth) {
+        if (auth == null || auth instanceof AnonymousAuthenticationToken) {
+            model.addAttribute("guestId", "guest");
+            return "user/history";
+        }
+        User user = userRepository.findByUsername(auth.getName()).orElse(null);
+        if (user != null) {
+            model.addAttribute("user", user);
+            model.addAttribute("history", watchHistoryService.getDistinctUserHistory(user.getId()));
+        }
+        return "user/history";
+    }
+
     @PostMapping("/profile/change-password")
     public String changePassword(@RequestParam String currentPassword,
-                                 @RequestParam String newPassword,
-                                 @RequestParam String confirmPassword,
-                                 Authentication auth,
-                                 RedirectAttributes redirect) {
+            @RequestParam String newPassword,
+            @RequestParam String confirmPassword,
+            Authentication auth,
+            RedirectAttributes redirect) {
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
             return "redirect:/auth/login";
 
@@ -440,13 +483,15 @@ public class WebController {
         return "redirect:/profile";
     }
 
-    /* ══════════════════════════════════════
-       ADMIN — DASHBOARD
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * ADMIN — DASHBOARD
+     * ══════════════════════════════════════
+     */
     @GetMapping("/admin")
     public String adminDashboard(Model model) {
-        model.addAttribute("totalMovies",   movieRepository.count());
-        model.addAttribute("totalUsers",    userRepository.count());
+        model.addAttribute("totalMovies", movieRepository.count());
+        model.addAttribute("totalUsers", userRepository.count());
         model.addAttribute("totalComments", commentRepository.count());
 
         long totalViews = movieRepository.findAll().stream()
@@ -456,24 +501,26 @@ public class WebController {
 
         LocalDateTime startOfMonth = LocalDateTime.now()
                 .withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        model.addAttribute("newUsersThisMonth",  userRepository.countByCreatedAtAfter(startOfMonth));
+        model.addAttribute("newUsersThisMonth", userRepository.countByCreatedAtAfter(startOfMonth));
         model.addAttribute("newMoviesThisMonth", movieRepository.countByCreatedAtAfter(startOfMonth));
 
         model.addAttribute("recentMovies", movieRepository.findAll(
                 PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent());
-        model.addAttribute("recentUsers",  userRepository.findTop10ByOrderByCreatedAtDesc());
+        model.addAttribute("recentUsers", userRepository.findTop10ByOrderByCreatedAtDesc());
 
         return "admin/dashboard";
     }
 
-    /* ══════════════════════════════════════
-       ADMIN — USER MANAGEMENT
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * ADMIN — USER MANAGEMENT
+     * ══════════════════════════════════════
+     */
     @GetMapping("/admin/users")
     public String adminUserList(@RequestParam(required = false) String role,
-                                @RequestParam(required = false) String q,
-                                @RequestParam(defaultValue = "0") int page,
-                                Model model) {
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
 
         Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<User> users;
@@ -501,8 +548,8 @@ public class WebController {
         User user = userRepository.findById(id).orElseThrow();
 
         switch (user.getRole()) {
-            case ROLE_USER  -> user.setRole(Role.ROLE_VIP);
-            case ROLE_VIP   -> user.setRole(Role.ROLE_ADMIN);
+            case ROLE_USER -> user.setRole(Role.ROLE_VIP);
+            case ROLE_VIP -> user.setRole(Role.ROLE_ADMIN);
             case ROLE_ADMIN -> user.setRole(Role.ROLE_USER);
         }
         userRepository.save(user);
@@ -525,18 +572,19 @@ public class WebController {
         return "redirect:/admin/users";
     }
 
-    /* ══════════════════════════════════════
-       HELPERS
-    ══════════════════════════════════════ */
+    /*
+     * ══════════════════════════════════════
+     * HELPERS
+     * ══════════════════════════════════════
+     */
     private List<Map<String, String>> genreColors() {
         return List.of(
-                Map.of("bg", "rgba(239,68,68,0.08)",  "border", "rgba(239,68,68,0.2)"),
+                Map.of("bg", "rgba(239,68,68,0.08)", "border", "rgba(239,68,68,0.2)"),
                 Map.of("bg", "rgba(59,130,246,0.08)", "border", "rgba(59,130,246,0.2)"),
                 Map.of("bg", "rgba(236,72,153,0.08)", "border", "rgba(236,72,153,0.2)"),
-                Map.of("bg", "rgba(34,197,94,0.08)",  "border", "rgba(34,197,94,0.2)"),
-                Map.of("bg", "rgba(234,179,8,0.08)",  "border", "rgba(234,179,8,0.2)"),
+                Map.of("bg", "rgba(34,197,94,0.08)", "border", "rgba(34,197,94,0.2)"),
+                Map.of("bg", "rgba(234,179,8,0.08)", "border", "rgba(234,179,8,0.2)"),
                 Map.of("bg", "rgba(168,85,247,0.08)", "border", "rgba(168,85,247,0.2)"),
-                Map.of("bg", "rgba(20,184,166,0.08)", "border", "rgba(20,184,166,0.2)")
-        );
+                Map.of("bg", "rgba(20,184,166,0.08)", "border", "rgba(20,184,166,0.2)"));
     }
 }

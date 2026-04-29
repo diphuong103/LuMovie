@@ -4,16 +4,27 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
-@Entity @Table(name = "watch_history")
-@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
+@Entity
+@Table(name = "watch_history")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class WatchHistory extends BaseEntity {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-    @ManyToOne @JoinColumn(name = "user_id", nullable = false) private User user;
-    @ManyToOne @JoinColumn(name = "episode_id", nullable = false) private Episode episode;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+    @ManyToOne
+    @JoinColumn(name = "episode_id", nullable = false)
+    private Episode episode;
     @Builder.Default
-    private Integer progressSeconds = 0;
+    private Long duration = 0L;
     @Builder.Default
-    private Boolean completed = false;
+    private Boolean isCompleted = false;
     @Builder.Default
-    private LocalDateTime watchedAt = LocalDateTime.now();
+    private LocalDateTime lastWatchedTime = LocalDateTime.now();
 }
