@@ -2,12 +2,14 @@ package com.diph.lumovie.controller;
 
 import com.diph.lumovie.dto.response.MovieResponse;
 import com.diph.lumovie.entity.*;
+import com.diph.lumovie.mapper.MovieMapper;
 import com.diph.lumovie.enums.MovieType;
 import com.diph.lumovie.enums.Role;
 import com.diph.lumovie.repository.*;
 import com.diph.lumovie.service.MovieService;
 import com.diph.lumovie.service.UserService;
 import com.diph.lumovie.service.WatchHistoryService;
+import com.diph.lumovie.service.WatchlistService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -45,10 +47,12 @@ public class WebController {
     private final WatchlistRepository watchlistRepository;
     private final WatchHistoryRepository watchHistoryRepository;
     private final WatchHistoryService watchHistoryService;
+    private final WatchlistService watchlistService;
     private final GenreRepository genreRepository;
     private final UserRepository userRepository;
     private final MovieRepository movieRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MovieMapper movieMapper;
 
     /*
      * ══════════════════════════════════════
@@ -226,21 +230,13 @@ public class WebController {
             Authentication auth,
             HttpServletRequest request) {
 
+        System.out.println("=== AUTH /watchlist/toggle: " + auth);
+
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
             return "redirect:/auth/login";
 
-        User user = userRepository.findByUsername(auth.getName()).orElseThrow();
+        watchlistService.toggleWatchlist(auth.getName(), movieId);
         Movie movie = movieRepository.findById(movieId).orElseThrow();
-
-        watchlistRepository.findByMovieIdAndUserId(movieId, user.getId())
-                .ifPresentOrElse(
-                        watchlistRepository::delete,
-                        () -> {
-                            Watchlist w = new Watchlist();
-                            w.setMovie(movie);
-                            w.setUser(user);
-                            watchlistRepository.save(w);
-                        });
 
         String referer = request.getHeader("Referer");
         // FIX: fallback an toàn hơn về trang chi tiết phim nếu không có Referer
@@ -399,6 +395,26 @@ public class WebController {
 
     /*
      * ══════════════════════════════════════
+     * FAVORITES PAGE (Danh sách yêu thích)
+     * ══════════════════════════════════════
+     */
+    @GetMapping("/favorites")
+    public String favoritesPage(Model model, Authentication auth) {
+        if (auth == null || auth instanceof AnonymousAuthenticationToken)
+            return "redirect:/auth/login";
+
+        User user = userRepository.findByUsername(auth.getName()).orElseThrow();
+        List<MovieResponse> favoriteMovies = watchlistService.getUserWatchlist(user.getId());
+
+        System.out.println("=== FAVORITES DEBUG: userId=" + user.getId() + ", count=" + favoriteMovies.size());
+
+        model.addAttribute("user", user);
+        model.addAttribute("favoriteMovies", favoriteMovies);
+        return "user/favorites";
+    }
+
+    /*
+     * ══════════════════════════════════════
      * PROFILE PAGE
      * ══════════════════════════════════════
      */
@@ -415,7 +431,8 @@ public class WebController {
         model.addAttribute("historyCount", historyList.size());
         model.addAttribute("ratingCount", ratingRepository.countByUserId(user.getId()));
 
-        model.addAttribute("watchlist", watchlistRepository.findByUserIdOrderByAddedAtDesc(user.getId()));
+        // Fetch Watchlist
+        model.addAttribute("watchlist", watchlistService.getUserWatchlist(user.getId()));
         model.addAttribute("history", historyList);
 
         return "user/profile";

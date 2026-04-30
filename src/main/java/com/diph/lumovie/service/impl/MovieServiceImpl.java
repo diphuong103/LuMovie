@@ -23,7 +23,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Transactional(readOnly = true)
-@Service @RequiredArgsConstructor
+@Service
+@RequiredArgsConstructor
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
     private final GenreRepository genreRepository;
@@ -38,14 +39,13 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public MovieResponse getById(Long id) {
         return movieMapper.toResponse(movieRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Movie not found: " + id)));
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found: " + id)));
     }
-
 
     @Override
     public MovieResponse getBySlug(String slug) {
         return movieMapper.toResponse(movieRepository.findBySlug(slug)
-            .orElseThrow(() -> new ResourceNotFoundException("Movie not found: " + slug)));
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found: " + slug)));
     }
 
     @Override
@@ -58,6 +58,16 @@ public class MovieServiceImpl implements MovieService {
     public Page<MovieResponse> searchPage(String keyword, Pageable pageable) {
         return movieRepository.searchByKeyword(keyword, pageable)
                 .map(movieMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MovieResponse> getByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty())
+            return List.of();
+        return movieRepository.findAllById(ids).stream()
+                .map(movieMapper::toResponse)
+                .toList();
     }
 
     @Override
@@ -100,7 +110,6 @@ public class MovieServiceImpl implements MovieService {
                 .collect(Collectors.toList());
     }
 
-
     @Override
     public List<MovieResponse> getRelated(Long movieId, int limit) {
         return movieRepository
@@ -110,35 +119,37 @@ public class MovieServiceImpl implements MovieService {
                 .toList();
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public MovieResponse create(CreateMovieRequest request) {
         Movie movie = Movie.builder()
-            .title(request.getTitle())
-            .originalTitle(request.getOriginalTitle())
-            .description(request.getDescription())
-            .posterUrl(request.getPosterUrl())
-            .trailerUrl(request.getTrailerUrl())
-            .backdropUrl(request.getBackdropUrl())
-            .releaseYear(request.getReleaseYear())
-            .duration(request.getDuration())
-            .director(request.getDirector())
-            .actors(request.getActors())
-            .country(request.getCountry())
-            .language(request.getLanguage())
-            .status(request.getStatus())
-            .type(request.getType())
-            .slug(SlugUtils.toSlug(request.getTitle()))
-            .build();
+                .title(request.getTitle())
+                .originalTitle(request.getOriginalTitle())
+                .description(request.getDescription())
+                .posterUrl(request.getPosterUrl())
+                .trailerUrl(request.getTrailerUrl())
+                .backdropUrl(request.getBackdropUrl())
+                .releaseYear(request.getReleaseYear())
+                .duration(request.getDuration())
+                .director(request.getDirector())
+                .actors(request.getActors())
+                .country(request.getCountry())
+                .language(request.getLanguage())
+                .status(request.getStatus())
+                .type(request.getType())
+                .slug(SlugUtils.toSlug(request.getTitle()))
+                .build();
         if (request.getGenreIds() != null) {
             movie.setGenres(genreRepository.findAllById(request.getGenreIds()));
         }
         return movieMapper.toResponse(movieRepository.save(movie));
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public MovieResponse update(Long id, CreateMovieRequest request) {
         Movie movie = movieRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Movie not found: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found: " + id));
         movie.setTitle(request.getTitle());
         movie.setDescription(request.getDescription());
         movie.setPosterUrl(request.getPosterUrl());
@@ -146,14 +157,19 @@ public class MovieServiceImpl implements MovieService {
         return movieMapper.toResponse(movieRepository.save(movie));
     }
 
-    @Override @Transactional
+    @Override
+    @Transactional
     public void delete(Long id) {
-        if (!movieRepository.existsById(id)) throw new ResourceNotFoundException("Movie not found: " + id);
+        if (!movieRepository.existsById(id))
+            throw new ResourceNotFoundException("Movie not found: " + id);
         movieRepository.deleteById(id);
     }
 
-    @Override @Transactional
-    public void incrementView(Long id) { movieRepository.incrementViewCount(id); }
+    @Override
+    @Transactional
+    public void incrementView(Long id) {
+        movieRepository.incrementViewCount(id);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -164,7 +180,6 @@ public class MovieServiceImpl implements MovieService {
                 .map(movieMapper::toResponse)
                 .orElse(null);
     }
-
 
     @Override
     public List<Genre> getAllGenres() {
@@ -205,8 +220,7 @@ public class MovieServiceImpl implements MovieService {
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
-                sortOrder
-        );
+                sortOrder);
 
         // 4. Truy vấn và Map kết quả
         return movieRepository.findAll(spec, sortedPageable)
@@ -215,10 +229,10 @@ public class MovieServiceImpl implements MovieService {
 
     private PageResponse<MovieResponse> toPageResponse(Page<Movie> page) {
         return PageResponse.<MovieResponse>builder()
-            .content(page.getContent().stream().map(movieMapper::toResponse).collect(Collectors.toList()))
-            .pageNumber(page.getNumber()).pageSize(page.getSize())
-            .totalElements(page.getTotalElements()).totalPages(page.getTotalPages())
-            .last(page.isLast()).build();
+                .content(page.getContent().stream().map(movieMapper::toResponse).collect(Collectors.toList()))
+                .pageNumber(page.getNumber()).pageSize(page.getSize())
+                .totalElements(page.getTotalElements()).totalPages(page.getTotalPages())
+                .last(page.isLast()).build();
     }
 
     public Page<MovieResponse> getMovies(String genreSlug, int page, int size) {

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh Sách Yêu Thích — LuMovie</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="page-wrapper">
+        <div style="padding:48px">
+
+            <!-- Page title -->
+            <div
+                style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px">
+                <div>
+                    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:4px;color:#e8b84b">
+                        ❤️ DANH SÁCH YÊU THÍCH
+                    </h1>
+                    <p style="font-size:0.85rem;color:#605848;margin-top:4px">
+                        Những bộ phim bạn đã lưu lại
+                    </p>
+                </div>
+                <a th:href="@{/movies}" class="btn btn-outline btn-sm">🎬 Khám Phá Thêm</a>
+            </div>
+
+            <!-- Empty state -->
+            <div th:if="${#lists.isEmpty(favoriteMovies)}" style="text-align:center;padding:80px 0">
+                <div style="font-size:4rem;margin-bottom:16px">💔</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:3px;color:#605848">
+                    DANH SÁCH TRỐNG
+                </div>
+                <p style="font-size:0.85rem;color:#605848;margin:12px 0 24px">
+                    Hãy bấm vào biểu tượng ❤️ trên thẻ phim để thêm vào danh sách yêu thích
+                </p>
+                <a th:href="@{/movies}" class="btn btn-gold">🎬 Khám Phá Phim</a>
+            </div>
+
+            <!-- Movie grid -->
+            <div th:unless="${#lists.isEmpty(favoriteMovies)}" class="movie-grid">
+                <th:block th:each="movie : ${favoriteMovies}">
+                    <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+                </th:block>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+
+</html>

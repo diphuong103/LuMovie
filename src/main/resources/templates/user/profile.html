@@ -94,7 +94,7 @@
 
         <!-- FIX: movie-grid bao đúng th:each, items render BÊN TRONG grid -->
         <div th:unless="${#lists.isEmpty(watchlist)}" class="movie-grid">
-          <div th:each="item : ${watchlist}" th:replace="~{fragments/movie-card :: card(movie=${item.movie})}"></div>
+          <div th:each="movie : ${watchlist}" th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
         </div>
 
       </div>
