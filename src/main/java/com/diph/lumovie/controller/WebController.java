@@ -1,5 +1,6 @@
 package com.diph.lumovie.controller;
 
+import com.diph.lumovie.dto.response.ApiResponse;
 import com.diph.lumovie.dto.response.MovieResponse;
 import com.diph.lumovie.entity.*;
 import com.diph.lumovie.mapper.MovieMapper;
@@ -19,16 +20,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
@@ -53,6 +52,7 @@ public class WebController {
     private final MovieRepository movieRepository;
     private final PasswordEncoder passwordEncoder;
     private final MovieMapper movieMapper;
+    private final EpisodeServerRepository episodeServerRepository;
 
     /*
      * ══════════════════════════════════════
@@ -275,6 +275,44 @@ public class WebController {
 
     /*
      * ══════════════════════════════════════
+     * POST: Đánh giá (AJAX)
+     * ══════════════════════════════════════
+     */
+    @PostMapping("/api/movies/{id}/rate")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Double>> rateMovieAjax(@PathVariable Long id,
+            @RequestParam int rating,
+            Authentication auth) {
+
+        if (auth == null || auth instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(401).build();
+        }
+
+        rating = Math.max(1, Math.min(5, rating));
+
+        User user = userRepository.findByUsername(auth.getName()).orElseThrow();
+        Movie movie = movieRepository.findById(id).orElseThrow();
+
+        Rating r = ratingRepository
+                .findByMovieIdAndUserId(id, user.getId())
+                .orElse(new Rating());
+        r.setMovie(movie);
+        r.setUser(user);
+        r.setScore(rating);
+        ratingRepository.save(r);
+
+        double avg = ratingRepository.findByMovieId(id)
+                .stream().mapToInt(Rating::getScore)
+                .average().orElse(0.0);
+        double newAvg = Math.round(avg * 10.0) / 10.0;
+        movie.setAvgRating(newAvg);
+        movieRepository.save(movie);
+
+        return ResponseEntity.ok(ApiResponse.ok("Rated successfully", newAvg));
+    }
+
+    /*
+     * ══════════════════════════════════════
      * POST: Toggle Watchlist
      * ══════════════════════════════════════
      */
@@ -371,6 +409,17 @@ public class WebController {
             }
         }
 
+        // Pass episode servers (Vietsub / Thuyet Minh / ...)
+        List<EpisodeServer> servers = (currentEpisode != null)
+                ? episodeServerRepository.findByEpisodeIdOrderByIdAsc(currentEpisode.getId())
+                : List.of();
+        model.addAttribute("servers", servers);
+        // First server URL (fallback to episode.videoUrl if no servers seeded)
+        String activeVideoUrl = !servers.isEmpty()
+                ? servers.get(0).getVideoUrl()
+                : (currentEpisode != null ? currentEpisode.getVideoUrl() : null);
+        model.addAttribute("activeVideoUrl", activeVideoUrl);
+
         String epLabel = currentEpisode != null
                 ? "Tập " + currentEpisode.getEpisodeNumber()
                 : "Phim Lẻ";
@@ -422,16 +471,29 @@ public class WebController {
     public String listMovies(@RequestParam(required = false) String genre,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String sort,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String actor,
+            @RequestParam(required = false) String country,
             @RequestParam(defaultValue = "0") int page,
             Model model) {
 
         Pageable pageable = PageRequest.of(page, 20);
-        Page<MovieResponse> movies = movieService.filterMovies(genre, type, sort, pageable);
+        Page<MovieResponse> movies = movieService.filterMovies(genre, type, sort, year, status, actor, country,
+                pageable);
 
         model.addAttribute("movies", movies);
         model.addAttribute("genres", genreRepository.findAll());
+        model.addAttribute("countries", movieRepository.findDistinctCountries());
         model.addAttribute("types", MovieType.values());
         model.addAttribute("years", List.of(2026, 2025, 2024, 2023, 2022));
+        model.addAttribute("sort", sort);
+        model.addAttribute("year", year);
+        model.addAttribute("status", status);
+        model.addAttribute("genre", genre);
+        model.addAttribute("type", type);
+        model.addAttribute("actor", actor);
+        model.addAttribute("country", country);
         model.addAttribute("pageTitle", genre != null ? "PHIM " + genre.toUpperCase() : "TẤT CẢ PHIM");
 
         if ("MOVIE".equals(type))
@@ -564,9 +626,8 @@ public class WebController {
         model.addAttribute("totalUsers", userRepository.count());
         model.addAttribute("totalComments", commentRepository.count());
 
-        long totalViews = movieRepository.findAll().stream()
-                .mapToLong(m -> m.getViewCount() != null ? m.getViewCount() : 0)
-                .sum();
+        Long sumViews = movieRepository.sumTotalViews();
+        long totalViews = sumViews != null ? sumViews : 0L;
         model.addAttribute("totalViews", totalViews);
 
         LocalDateTime startOfMonth = LocalDateTime.now()

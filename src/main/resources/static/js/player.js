@@ -6,28 +6,28 @@
 
 class LuMoviePlayer {
   constructor(videoEl, options = {}) {
-    this.video    = videoEl;
-    this.hls      = null;
-    this.options  = options;
-    this.isReady  = false;
+    this.video = videoEl;
+    this.hls = null;
+    this.options = options;
+    this.isReady = false;
 
     // UI elements
-    this.container   = videoEl.closest('.lm-player-wrap');
-    this.playBtn     = this.container?.querySelector('.lm-play-btn');
+    this.container = videoEl.closest('.lm-player-wrap');
+    this.playBtn = this.container?.querySelector('.lm-play-btn');
     this.progressBar = this.container?.querySelector('.lm-progress-fill');
-    this.progressWrap= this.container?.querySelector('.lm-progress-wrap');
-    this.timeEl      = this.container?.querySelector('.lm-time');
-    this.durationEl  = this.container?.querySelector('.lm-duration');
-    this.volBtn      = this.container?.querySelector('.lm-vol-btn');
-    this.volSlider   = this.container?.querySelector('.lm-vol-slider');
-    this.fsBtn       = this.container?.querySelector('.lm-fs-btn');
-    this.overlay     = this.container?.querySelector('.lm-overlay');
-    this.spinner     = this.container?.querySelector('.lm-spinner');
+    this.progressWrap = this.container?.querySelector('.lm-progress-wrap');
+    this.timeEl = this.container?.querySelector('.lm-time');
+    this.durationEl = this.container?.querySelector('.lm-duration');
+    this.volBtn = this.container?.querySelector('.lm-vol-btn');
+    this.volSlider = this.container?.querySelector('.lm-vol-slider');
+    this.fsBtn = this.container?.querySelector('.lm-fs-btn');
+    this.overlay = this.container?.querySelector('.lm-overlay');
+    this.spinner = this.container?.querySelector('.lm-spinner');
     this.qualityMenu = this.container?.querySelector('.lm-quality-menu');
-    this.qualityBtn  = this.container?.querySelector('.lm-quality-btn');
-    this.speedBtn    = this.container?.querySelector('.lm-speed-btn');
-    this.speedMenu   = this.container?.querySelector('.lm-speed-menu');
-    this.controls    = this.container?.querySelector('.lm-controls');
+    this.qualityBtn = this.container?.querySelector('.lm-quality-btn');
+    this.speedBtn = this.container?.querySelector('.lm-speed-btn');
+    this.speedMenu = this.container?.querySelector('.lm-speed-menu');
+    this.controls = this.container?.querySelector('.lm-controls');
 
     this._init();
   }
@@ -63,7 +63,7 @@ class LuMoviePlayer {
       this.hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
         this._showSpinner(false);
         this.isReady = true;
-        this.video.play().catch(() => {});
+        this.video.play().catch(() => { });
         this._buildQualityMenu(data.levels);
       });
 
@@ -80,7 +80,7 @@ class LuMoviePlayer {
       this.video.addEventListener('loadedmetadata', () => {
         this._showSpinner(false);
         this.isReady = true;
-        this.video.play().catch(() => {});
+        this.video.play().catch(() => { });
       });
     } else {
       this._showError('Trình duyệt không hỗ trợ phát video này.');
@@ -93,13 +93,13 @@ class LuMoviePlayer {
     const v = this.video;
 
     v.addEventListener('timeupdate', () => this._updateProgress());
-    v.addEventListener('waiting',    () => this._showSpinner(true));
-    v.addEventListener('playing',    () => {
+    v.addEventListener('waiting', () => this._showSpinner(true));
+    v.addEventListener('playing', () => {
       this._showSpinner(false);
       this._setPlayIcon(true);
     });
-    v.addEventListener('pause',  () => this._setPlayIcon(false));
-    v.addEventListener('ended',  () => {
+    v.addEventListener('pause', () => this._setPlayIcon(false));
+    v.addEventListener('ended', () => {
       this._setPlayIcon(false);
       if (this.options.onEnded) this.options.onEnded();
     });
@@ -119,7 +119,7 @@ class LuMoviePlayer {
     // Progress seek
     this.progressWrap?.addEventListener('click', e => {
       const rect = this.progressWrap.getBoundingClientRect();
-      const pct  = (e.clientX - rect.left) / rect.width;
+      const pct = (e.clientX - rect.left) / rect.width;
       if (this.video.duration) {
         this.video.currentTime = pct * this.video.duration;
       }
@@ -132,7 +132,7 @@ class LuMoviePlayer {
 
     this.volSlider?.addEventListener('input', e => {
       this.video.volume = e.target.value / 100;
-      this.video.muted  = false;
+      this.video.muted = false;
     });
 
     // Fullscreen
@@ -180,10 +180,10 @@ class LuMoviePlayer {
     this.qualityMenu.innerHTML = '<div class="lm-menu-item active" data-level="-1">Auto</div>';
     levels.forEach((lv, i) => {
       const label = lv.height ? lv.height + 'p' : 'Level ' + i;
-      const el    = document.createElement('div');
-      el.className     = 'lm-menu-item';
+      const el = document.createElement('div');
+      el.className = 'lm-menu-item';
       el.dataset.level = i;
-      el.textContent   = label;
+      el.textContent = label;
       el.addEventListener('click', () => {
         this.hls.currentLevel = i;
         this.qualityMenu.querySelectorAll('.lm-menu-item').forEach(x => x.classList.remove('active'));
@@ -208,7 +208,7 @@ class LuMoviePlayer {
 
   _bindKeyboard() {
     document.addEventListener('keydown', e => {
-      if (['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
       switch (e.key) {
         case ' ':
         case 'k':
@@ -280,10 +280,10 @@ class LuMoviePlayer {
   }
 
   _updateProgress() {
-    const v   = this.video;
+    const v = this.video;
     const pct = v.duration ? (v.currentTime / v.duration) * 100 : 0;
-    if (this.progressBar)  this.progressBar.style.width = pct + '%';
-    if (this.timeEl)       this.timeEl.textContent = this._fmt(v.currentTime);
+    if (this.progressBar) this.progressBar.style.width = pct + '%';
+    if (this.timeEl) this.timeEl.textContent = this._fmt(v.currentTime);
 
     // Save progress
     if (this._saveTimer) clearTimeout(this._saveTimer);
@@ -340,7 +340,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!wrap) return;
 
   const video = wrap.querySelector('video');
-  const src   = video?.dataset.src;
+  const src = video?.dataset.src;
   if (!video) return;
 
   window.luPlayer = new LuMoviePlayer(video, {
@@ -353,7 +353,7 @@ window.addEventListener('DOMContentLoaded', () => {
     },
     onProgress: (currentTime, duration) => {
       // Lưu tiến trình xem
-      const movieId   = document.body.dataset.movieId;
+      const movieId = document.body.dataset.movieId;
       const episodeId = document.body.dataset.episodeId;
       if (!movieId) return;
       const pct = Math.round((currentTime / duration) * 100);
@@ -361,10 +361,13 @@ window.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ movieId, episodeId, progressPercent: pct })
-      }).catch(() => {});
+      }).catch(() => { });
     }
   });
 
   if (src) luPlayer.load(src);
+
+  // Expose for server tab switching (Vietsub / Thuyết Minh)
+  window.luMovieLoadSource = (url) => luPlayer.load(url);
 });
 

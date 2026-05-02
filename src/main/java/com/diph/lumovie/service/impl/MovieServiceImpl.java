@@ -187,7 +187,8 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public Page<MovieResponse> filterMovies(String genre, String type, String sortKey, Pageable pageable) {
+    public Page<MovieResponse> filterMovies(String genre, String type, String sortKey, Integer year, String status,
+            String actor, String country, Pageable pageable) {
         // 1. Tạo Specification
         Specification<Movie> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -201,6 +202,23 @@ public class MovieServiceImpl implements MovieService {
 
             if (type != null && !type.isEmpty()) {
                 predicates.add(cb.equal(root.get("type"), type));
+            }
+
+            if (year != null) {
+                predicates.add(cb.equal(root.get("releaseYear"), year));
+            }
+
+            if (status != null && !status.isEmpty()) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (actor != null && !actor.isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("actors")),
+                        "%" + actor.toLowerCase() + "%"));
+            }
+
+            if (country != null && !country.isEmpty()) {
+                predicates.add(cb.equal(root.get("country"), country));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

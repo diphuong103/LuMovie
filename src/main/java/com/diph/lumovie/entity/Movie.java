@@ -38,6 +38,7 @@ public class Movie extends BaseEntity {
     private Long viewCount = 0L;
     private String country;
     private String language;
+    private String quality;
     private String slug;
     @Builder.Default
     @Enumerated(EnumType.STRING)

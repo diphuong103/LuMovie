@@ -46,5 +46,6 @@ public interface MovieService {
 
     List<MovieResponse> getByIds(List<Long> ids);
 
-    Page<MovieResponse> filterMovies(String genre, String type, String sort, Pageable pageable);
+    Page<MovieResponse> filterMovies(String genre, String type, String sort, Integer year, String status,
+            String actor, String country, Pageable pageable);
 }

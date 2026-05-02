@@ -8,7 +8,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data @Builder @AllArgsConstructor @NoArgsConstructor
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class MovieResponse {
     private Long id;
     private String title;
@@ -26,6 +29,7 @@ public class MovieResponse {
     private Long viewCount;
     private String country;
     private String language;
+    private String quality;
     private MovieStatus status;
     private MovieType type;
     private String slug;
@@ -48,23 +52,26 @@ public class MovieResponse {
 
     // ── Tổng số tập — dùng trong badge ──
     public int getTotalEpisodes() {
-        if (episodes == null || episodes.isEmpty()) return 0;
+        if (episodes == null || episodes.isEmpty())
+            return 0;
         return episodes.size();
     }
 
     // ── Thể loại đầu tiên để hiển thị ──
     public String getFirstGenreName() {
-        if (genres == null || genres.isEmpty()) return "Phim";
+        if (genres == null || genres.isEmpty())
+            return "Phim";
         return genres.get(0).getName();
     }
 
     // ── Label loại phim ──
     public String getTypeLabel() {
-        if (type == null) return "";
+        if (type == null)
+            return "";
         return switch (type) {
-            case MOVIE   -> "Phim Lẻ";
-            case SERIES  -> "Phim Bộ";
-            case ANIME   -> "Anime";
+            case MOVIE -> "Phim Lẻ";
+            case SERIES -> "Phim Bộ";
+            case ANIME -> "Anime";
             case TV_SHOW -> "TV Show";
         };
     }

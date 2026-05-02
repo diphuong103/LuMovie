@@ -22,7 +22,7 @@
       </div>
 
       <!-- Empty state -->
-      <div th:if="${#lists.isEmpty(history)}"
+      <div th:if="${history == null or #lists.isEmpty(history)}"
         style="text-align:center;padding:60px 0;background:#141419;border-radius:12px;border:1px solid rgba(200,146,42,0.1)">
         <div style="font-size:3rem;margin-bottom:12px">📺</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:3px;color:#605848">CHƯA XEM PHIM
@@ -32,7 +32,7 @@
       </div>
 
       <!-- History List -->
-      <div th:unless="${#lists.isEmpty(history)}" style="display:flex;flex-direction:column;gap:12px">
+      <div th:if="${history != null and !#lists.isEmpty(history)}" style="display:flex;flex-direction:column;gap:12px">
         <div th:each="item : ${history}" style="display:flex;gap:16px;background:#141419;border:1px solid rgba(200,146,42,0.1);
                   border-radius:12px;padding:16px;align-items:center">
           <div style="width:64px;height:96px;border-radius:8px;overflow:hidden;flex-shrink:0">

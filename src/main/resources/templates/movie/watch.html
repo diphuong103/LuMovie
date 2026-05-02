@@ -708,9 +708,23 @@
       <span class="cur" th:unless="${currentEpisode != null}">Xem Phim</span>
     </div>
 
+    <!-- ══ SERVER / LANGUAGE TABS ══ -->
+    <div th:if="${!#lists.isEmpty(servers)}"
+      style="background:#0a0a0e;padding:8px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(200,146,42,0.08)">
+      <span
+        style="font-size:0.72rem;color:#605848;letter-spacing:1px;text-transform:uppercase;margin-right:4px">Nguồn:</span>
+      <button th:each="s,iter : ${servers}" th:id="'srv-btn-' + ${iter.index}" th:text="${s.serverName}"
+        th:onclick="'switchServer(this, \'' + ${s.videoUrl} + '\',' + ${iter.index} + '), switchServerActive(' + ${iter.index} + ',' + ${#lists.size(servers)} + ')'"
+        th:style="${iter.index == 0}
+                ? 'padding:5px 14px;border-radius:20px;border:1px solid #e8b84b;background:linear-gradient(135deg,#c8922a,#e8b84b);color:#0a0a0e;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif;'
+                : 'padding:5px 14px;border-radius:20px;border:1px solid rgba(200,146,42,0.25);background:transparent;color:#a09880;font-size:0.78rem;font-weight:500;cursor:pointer;font-family:\'DM Sans\',sans-serif;transition:all 0.15s;'"
+        onmouseover="if(!this.dataset.active)this.style.borderColor='rgba(200,146,42,0.6)'"
+        onmouseout="if(!this.dataset.active)this.style.borderColor='rgba(200,146,42,0.25)'">Vietsub</button>
+    </div>
+
     <!-- ══ HLS PLAYER ══ -->
     <div class="lm-player-wrap">
-      <video th:data-src="${currentEpisode?.videoUrl}" preload="metadata" playsinline>
+      <video th:data-src="${activeVideoUrl}" preload="metadata" playsinline></video>
       </video>
       <div class="lm-overlay"></div>
       <div class="lm-spinner">
@@ -895,6 +909,51 @@
   <script th:inline="javascript">
     const MOVIE_ID = /*[[${movie.id}]]*/ 0;
     const CURRENT_USER = /*[[${#authentication?.principal?.username}]]*/ null;
+    const SERVER_COUNT = /*[[${#lists.size(servers)}]]*/ 0;
+
+    // ══ Server / Language Switching ══
+    function switchServer(btn, url, idx) {
+      // Save current position before switching
+      const video = document.querySelector('video');
+      if (video) video.pause();
+      // player.js exposes window.luMovieLoadSource(url) for HLS reload
+      if (typeof window.luMovieLoadSource === 'function') {
+        window.luMovieLoadSource(url);
+      } else {
+        // Fallback: set src directly
+        if (video) {
+          video.src = url;
+          video.load();
+          video.play().catch(() => { });
+        }
+      }
+    }
+
+    function switchServerActive(activeIdx, total) {
+      for (let i = 0; i < total; i++) {
+        const b = document.getElementById('srv-btn-' + i);
+        if (!b) continue;
+        if (i === activeIdx) {
+          b.style.background = 'linear-gradient(135deg,#c8922a,#e8b84b)';
+          b.style.borderColor = '#e8b84b';
+          b.style.color = '#0a0a0e';
+          b.style.fontWeight = '700';
+          b.dataset.active = '1';
+        } else {
+          b.style.background = 'transparent';
+          b.style.borderColor = 'rgba(200,146,42,0.25)';
+          b.style.color = '#a09880';
+          b.style.fontWeight = '500';
+          delete b.dataset.active;
+        }
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
 
     function copyWatchLink() {
       navigator.clipboard.writeText(window.location.href).then(() => {
@@ -913,17 +972,20 @@
     }
 
     function createCommentHTML(data, isReply) {
-      const av = data.username.charAt(0).toUpperCase();
+      const av = escapeHtml(data.username.charAt(0).toUpperCase());
+      const safeName = escapeHtml(data.username);
+      const safeContent = escapeHtml(data.content);
+      const safeTime = escapeHtml(data.createdAt);
       const avSize = isReply ? 'width:24px;height:24px;font-size:0.7rem;' : '';
       const textSize = isReply ? 'font-size:0.78rem;' : '';
       return `<div class="cmt-item" style="padding:0;border:none;">
         <div class="cmt-av" style="${avSize}">${av}</div>
         <div class="cmt-body">
           <div class="cmt-meta">
-            <span class="cmt-user">${data.username}</span>
-            <span class="cmt-time">${data.createdAt}</span>
+            <span class="cmt-user">${safeName}</span>
+            <span class="cmt-time">${safeTime}</span>
           </div>
-          <div class="cmt-text" style="${textSize}">${data.content}</div>
+          <div class="cmt-text" style="${textSize}">${safeContent}</div>
           ${!isReply ? `<div style="margin-top:4px;">
             <button class="reply-btn" onclick="toggleReplyForm(${data.id})"
               style="background:none;border:none;color:#a09880;font-size:0.72rem;cursor:pointer;text-decoration:underline;padding:0;">Trả lời</button>

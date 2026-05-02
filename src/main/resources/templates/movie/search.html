@@ -1,118 +1,124 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title th:text="(${param.q != null} ? 'Tìm kiếm: ' + ${param.q} : 'Tìm Kiếm') + ' — LuMovie'">Tìm Kiếm — LuMovie</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title th:text="(${param.q != null} ? 'Tìm kiếm: ' + ${param.q} : 'Tìm Kiếm') + ' — LuMovie'">Tìm Kiếm — LuMovie
+  </title>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
+
 <body>
-<div th:replace="~{fragments/header :: header}"></div>
+  <div th:replace="~{fragments/header :: header}"></div>
 
-<div class="page-wrapper">
-  <div style="padding:48px">
+  <div class="page-wrapper">
+    <div style="padding:48px">
 
-    <!-- Search hero -->
-    <div style="text-align:center;padding:60px 0 48px">
-      <h1 style="font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:6px;
+      <!-- Search hero -->
+      <div style="text-align:center;padding:60px 0 48px">
+        <h1 style="font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:6px;
                  background:linear-gradient(135deg,#f5d280,#e8b84b);
                  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
                  background-clip:text;margin-bottom:32px">🔍 TÌM KIẾM PHIM</h1>
 
-      <form th:action="@{/search}" method="get" style="max-width:640px;margin:0 auto">
-        <div class="search-bar" style="padding:8px 8px 8px 24px">
-          <input type="text" name="q" th:value="${param.q}"
-                 placeholder="Nhập tên phim, diễn viên, đạo diễn..."
-                 style="font-size:1rem" autofocus/>
-          <button type="submit" class="btn btn-gold">🔍 Tìm Kiếm</button>
+        <form th:action="@{/search}" method="get" style="max-width:640px;margin:0 auto">
+          <div class="search-bar" style="padding:8px 8px 8px 24px">
+            <input type="text" name="q" th:value="${param.q}" placeholder="Nhập tên phim, diễn viên, đạo diễn..."
+              style="font-size:1rem" autofocus />
+            <button type="submit" class="btn btn-gold">🔍 Tìm Kiếm</button>
+          </div>
+        </form>
+
+        <!-- Quick genre buttons -->
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:24px">
+          <a th:href="@{/movies(genre='hanh-dong')}" class="genre-pill gp-1"
+            style="padding:6px 14px;font-size:0.75rem"><span>⚔ Hành Động</span></a>
+          <a th:href="@{/movies(genre='vien-tuong')}" class="genre-pill gp-2"
+            style="padding:6px 14px;font-size:0.75rem"><span>🚀 Viễn Tưởng</span></a>
+          <a th:href="@{/movies(genre='tinh-cam')}" class="genre-pill gp-3"
+            style="padding:6px 14px;font-size:0.75rem"><span>💕 Tình Cảm</span></a>
+          <a th:href="@{/movies(genre='kinh-di')}" class="genre-pill gp-6"
+            style="padding:6px 14px;font-size:0.75rem"><span>🔮 Kinh Dị</span></a>
+          <a th:href="@{/movies(type='ANIME')}" class="genre-pill gp-7"
+            style="padding:6px 14px;font-size:0.75rem"><span>🎌 Anime</span></a>
         </div>
-      </form>
-
-      <!-- Quick genre buttons -->
-      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:24px">
-        <a th:href="@{/movies?genre='hanh-dong'}" class="genre-pill gp-1" style="padding:6px 14px;font-size:0.75rem"><span>⚔ Hành Động</span></a>
-        <a th:href="@{/movies?genre='vien-tuong'}" class="genre-pill gp-2" style="padding:6px 14px;font-size:0.75rem"><span>🚀 Viễn Tưởng</span></a>
-        <a th:href="@{/movies?genre='tinh-cam'}" class="genre-pill gp-3" style="padding:6px 14px;font-size:0.75rem"><span>💕 Tình Cảm</span></a>
-        <a th:href="@{/movies?genre='kinh-di'}" class="genre-pill gp-6" style="padding:6px 14px;font-size:0.75rem"><span>🔮 Kinh Dị</span></a>
-        <a th:href="@{/movies?type='ANIME'}" class="genre-pill gp-7" style="padding:6px 14px;font-size:0.75rem"><span>🎌 Anime</span></a>
-      </div>
-    </div>
-
-    <!-- Results -->
-    <div th:if="${param.q != null}">
-
-      <!-- Result header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid rgba(200,146,42,0.1)">
-        <div>
-          <span style="font-size:0.83rem;color:#605848">Kết quả tìm kiếm cho </span>
-          <span style="font-size:0.9rem;font-weight:600;color:#e8b84b" th:text="'&quot;' + ${param.q} + '&quot;'">"query"</span>
-        </div>
-        <span style="font-size:0.8rem;color:#605848"
-              th:text="${totalItems} + ' kết quả'">0 kết quả</span>
       </div>
 
-      <!-- No results -->
-      <div th:if="${#lists.isEmpty(movies)}" style="text-align:center;padding:80px 0">
-        <div style="font-size:4rem;margin-bottom:16px;opacity:0.5">🎬</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#605848;margin-bottom:10px">KHÔNG TÌM THẤY KẾT QUẢ</div>
-        <p style="font-size:0.85rem;color:#605848;margin-bottom:24px">Thử tìm với từ khóa khác hoặc kiểm tra chính tả</p>
+      <!-- Results -->
+      <div th:if="${param.q != null}">
 
-        <!-- Suggestions -->
-        <div style="margin-top:32px">
-          <div style="font-size:0.8rem;color:#605848;margin-bottom:14px;letter-spacing:1px;text-transform:uppercase">Gợi Ý Cho Bạn</div>
-          <div class="movie-grid" th:if="${suggestedMovies != null}">
-            <div th:each="movie : ${suggestedMovies}"
-                 th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+        <!-- Result header -->
+        <div
+          style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid rgba(200,146,42,0.1)">
+          <div>
+            <span style="font-size:0.83rem;color:#605848">Kết quả tìm kiếm cho </span>
+            <span style="font-size:0.9rem;font-weight:600;color:#e8b84b"
+              th:text="'&quot;' + ${param.q} + '&quot;'">"query"</span>
+          </div>
+          <span style="font-size:0.8rem;color:#605848" th:text="${totalItems} + ' kết quả'">0 kết quả</span>
+        </div>
+
+        <!-- No results -->
+        <div th:if="${#lists.isEmpty(movies)}" style="text-align:center;padding:80px 0">
+          <div style="font-size:4rem;margin-bottom:16px;opacity:0.5">🎬</div>
+          <div
+            style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#605848;margin-bottom:10px">
+            KHÔNG TÌM THẤY KẾT QUẢ</div>
+          <p style="font-size:0.85rem;color:#605848;margin-bottom:24px">Thử tìm với từ khóa khác hoặc kiểm tra chính tả
+          </p>
+
+          <!-- Suggestions -->
+          <div style="margin-top:32px">
+            <div style="font-size:0.8rem;color:#605848;margin-bottom:14px;letter-spacing:1px;text-transform:uppercase">
+              Gợi Ý Cho Bạn</div>
+            <div class="movie-grid" th:if="${suggestedMovies != null}">
+              <div th:each="movie : ${suggestedMovies}" th:replace="~{fragments/movie-card :: card(movie=${movie})}">
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Results grid -->
-      <div th:unless="${#lists.isEmpty(movies)}">
-        <div class="movie-grid" style="margin-bottom:32px">
-          
-          <th:block th:each="movie : ${movies}">
-            <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
-          </th:block>
+        <!-- Results grid -->
+        <div th:unless="${#lists.isEmpty(movies)}">
+          <div class="movie-grid" style="margin-bottom:32px">
 
+            <th:block th:each="movie : ${movies}">
+              <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+            </th:block>
+
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination">
+            <a th:if="${hasPrev}" th:href="@{/search(q=${param.q}, page=${currentPage - 1})}" class="page-btn">‹</a>
+
+            <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:href="@{/search(q=${param.q}, page=${i})}"
+              th:classappend="${i == currentPage} ? ' active'" th:text="${i + 1}" class="page-btn">1</a>
+
+            <a th:if="${hasNext}" th:href="@{/search(q=${param.q}, page=${currentPage + 1})}" class="page-btn">›</a>
+          </div>
         </div>
 
-        <!-- Pagination -->
-        <div class="pagination">
-          <a th:if="${hasPrev}"
-             th:href="@{/search(q=${param.q}, page=${currentPage - 1})}"
-             class="page-btn">‹</a>
-
-          <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-             th:href="@{/search(q=${param.q}, page=${i})}"
-             th:classappend="${i == currentPage} ? ' active'"
-             th:text="${i + 1}"
-             class="page-btn">1</a>
-
-          <a th:if="${hasNext}"
-             th:href="@{/search(q=${param.q}, page=${currentPage + 1})}"
-             class="page-btn">›</a>
-        </div>
-      </div>
-
-        </div>
       </div>
     </div>
-
-<div th:unless="${param.q != null}">
-  <div style="font-family:'Bebas Neue',sans-serif;">🔥 Phim Thịnh Hành</div>
-  <div class="movie-grid">
-
-    <th:block th:each="movie : ${movies}">
-      <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
-    </th:block>
-
   </div>
+
+  <div th:unless="${param.q != null}">
+    <div style="font-family:'Bebas Neue',sans-serif;">🔥 Phim Thịnh Hành</div>
+    <div class="movie-grid">
+
+      <th:block th:each="movie : ${movies}">
+        <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+      </th:block>
+
     </div>
+  </div>
 
   </div>
-</div>
+  </div>
 
-<div th:replace="~{fragments/footer :: footer}"></div>
+  <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
+
 </html>

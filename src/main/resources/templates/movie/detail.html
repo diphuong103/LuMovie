@@ -87,7 +87,23 @@
           <!-- Genres -->
           <div class="detail-genres">
             <a th:each="genre : ${movie.genres}" th:href="@{/movies(genre=${genre.slug})}" class="detail-genre-tag"
-              th:text="${genre.name}">Thể loại</a>
+              th:text="${genre.name}">Ảnhập</a>
+          </div>
+
+          <!-- Director & Actors -->
+          <div th:if="${movie.director != null and !#strings.isEmpty(movie.director)}"
+            style="margin-top:8px;font-size:0.82rem;color:var(--text2);line-height:1.8">
+            <span style="color:var(--text3)">Dặo dién:</span>
+            <a th:href="@{/movies(actor=${movie.director})}" style="color:var(--gold2);margin-left:4px"
+              th:text="${movie.director}"></a>
+          </div>
+          <div th:if="${movie.actors != null and !#strings.isEmpty(movie.actors)}"
+            style="margin-top:4px;font-size:0.82rem;color:var(--text2);line-height:1.8">
+            <span style="color:var(--text3)">Diễn viên:</span>
+            <th:block th:each="a,it : ${#strings.arraySplit(movie.actors,',')}">
+              <a th:href="@{/movies(actor=${#strings.trim(a)})}" style="color:var(--gold2);margin-left:2px"
+                th:text="${#strings.trim(a)}"></a><span th:if="!${it.last}">,</span>
+            </th:block>
           </div>
 
           <!-- Actions -->
@@ -96,11 +112,9 @@
 
             <!-- Watchlist (đăng nhập) -->
             <div sec:authorize="isAuthenticated()">
-              <form th:action="@{/watchlist/toggle}" method="post">
-                <input type="hidden" name="movieId" th:value="${movie.id}" />
-                <button type="submit" class="btn btn-ghost btn-lg"
-                  th:text="${inWatchlist ? '❤️ Đã Lưu' : '🤍 Lưu Phim'}">🤍 Lưu Phim</button>
-              </form>
+              <button type="button" class="btn btn-ghost btn-lg" id="watchlist-btn" onclick="toggleWatchlist()">
+                <span th:text="${inWatchlist ? '❤️ Đã Lưu' : '🤍 Lưu Phim'}">🤍 Lưu Phim</span>
+              </button>
             </div>
 
             <button class="btn btn-ghost btn-lg" onclick="shareMovie()">📤 Chia Sẻ</button>
@@ -157,15 +171,16 @@
           <!-- Form đánh giá — đã đăng nhập -->
           <div sec:authorize="isAuthenticated()">
             <p class="rating-prompt">Đánh giá của bạn:</p>
-            <form th:action="@{/movies/{id}/rate(id=${movie.id})}" method="post" class="rating-form">
+            <form id="rating-form" class="rating-form" onsubmit="submitRating(event)">
               <div class="star-rating">
                 <th:block th:each="i : ${#numbers.sequence(5,1,-1)}">
                   <input type="radio" name="rating" th:value="${i}" th:id="'star' + ${i}"
-                    th:checked="${userRating == i}" style="display:none" />
+                    th:checked="${userRating == i}" style="display:none" onchange="submitRating()" />
                   <label th:for="'star' + ${i}">★</label>
                 </th:block>
               </div>
-              <button type="submit" class="btn btn-outline btn-sm">Gửi Đánh Giá</button>
+              <div id="rating-msg" style="display:none; color:var(--gold2); font-size:0.8rem; margin-top:8px;">✅ Cảm ơn
+                bạn đã đánh giá!</div>
             </form>
           </div>
 
@@ -332,6 +347,12 @@
     const MOVIE_ID = /*[[${movie.id}]]*/ 0;
     const CURRENT_USER = /*[[${#authentication?.principal?.username}]]*/ null;
 
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
     function shareMovie() {
       if (navigator.share) {
         navigator.share({ title: document.title, url: window.location.href });
@@ -339,6 +360,38 @@
         navigator.clipboard.writeText(window.location.href)
           .then(() => alert('Đã copy link phim!'));
       }
+    }
+
+    async function toggleWatchlist() {
+      try {
+        const res = await fetch(`/api/watchlist/toggle?movieId=${MOVIE_ID}`, { method: 'POST' });
+        if (res.status === 401) { window.location.href = '/auth/login'; return; }
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            const btn = document.getElementById('watchlist-btn');
+            btn.querySelector('span').textContent = data.data.added ? '❤️ Đã Lưu' : '🤍 Lưu Phim';
+          }
+        }
+      } catch (e) { console.error('Watchlist Error:', e); }
+    }
+
+    async function submitRating(e) {
+      if (e) e.preventDefault();
+      const ratingInput = document.querySelector('input[name="rating"]:checked');
+      if (!ratingInput) return;
+      try {
+        const res = await fetch(`/api/movies/${MOVIE_ID}/rate?rating=${ratingInput.value}`, { method: 'POST' });
+        if (res.status === 401) { window.location.href = '/auth/login'; return; }
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            document.getElementById('rating-msg').style.display = 'block';
+            setTimeout(() => document.getElementById('rating-msg').style.display = 'none', 3000);
+            document.querySelector('.rating-big-num').textContent = data.data.toFixed(1);
+          }
+        }
+      } catch (e) { console.error('Rating Error:', e); }
     }
 
     function toggleReplyForm(commentId) {
@@ -349,16 +402,19 @@
     }
 
     function createCommentHTML(data, isReply) {
-      const av = data.username.charAt(0).toUpperCase();
+      const av = escapeHtml(data.username.charAt(0).toUpperCase());
+      const safeName = escapeHtml(data.username);
+      const safeContent = escapeHtml(data.content);
+      const safeTime = escapeHtml(data.createdAt);
       const avSize = isReply ? 'width:32px;height:32px;font-size:0.8rem;' : '';
       return `<div class="comment-item" style="padding:0;border:none;">
         <div class="comment-avatar" style="${avSize}">${av}</div>
         <div class="comment-body">
           <div class="comment-header">
-            <span class="comment-name">${data.username}</span>
-            <span class="comment-time">${data.createdAt}</span>
+            <span class="comment-name">${safeName}</span>
+            <span class="comment-time">${safeTime}</span>
           </div>
-          <p class="comment-text">${data.content}</p>
+          <p class="comment-text">${safeContent}</p>
           ${!isReply ? `<div style="margin-top:6px;">
             <button class="reply-btn" onclick="toggleReplyForm(${data.id})"
               style="background:none;border:none;color:var(--text3,#a09880);font-size:0.8rem;cursor:pointer;text-decoration:underline;padding:0;">Trả lời</button>

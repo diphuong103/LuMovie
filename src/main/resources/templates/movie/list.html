@@ -1,186 +1,216 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title th:text="'Danh Sách Phim — LuMovie'">Phim — LuMovie</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}"/>
+  <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
+
 <body>
-<div th:replace="~{fragments/header :: header}"></div>
+  <div th:replace="~{fragments/header :: header}"></div>
 
-<div class="page-wrapper">
-  <div style="padding:48px 48px 60px">
+  <div class="page-wrapper">
+    <div style="padding:48px 48px 60px">
 
-    <!-- Breadcrumb -->
-    <div class="breadcrumb">
-      <a th:href="@{/}">🏠 Trang Chủ</a>
-      <span class="breadcrumb-sep">›</span>
-      <span class="breadcrumb-current">Danh Sách Phim</span>
-    </div>
-
-    <!-- Page Title -->
-    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px">
-      <div>
-        <h1 style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:5px;color:#e8b84b;margin-bottom:6px"
-            th:text="${pageTitle ?: 'TẤT CẢ PHIM'}">TẤT CẢ PHIM</h1>
-
-        <p style="font-size:0.83rem;color:#605848"
-           th:text="${movies.totalElements} + ' bộ phim được tìm thấy'">0 bộ phim</p>
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a th:href="@{/}">🏠 Trang Chủ</a>
+        <span class="breadcrumb-sep">›</span>
+        <span class="breadcrumb-current">Danh Sách Phim</span>
       </div>
 
-      <!-- Sort dropdown -->
-<!--      <form th:action="@{/movies}" method="get" style="display:flex;align-items:center;gap:10px">-->
-<!--        <input type="hidden" name="type" th:value="${param.type}"/>-->
-<!--        <input type="hidden" name="genre" th:value="${param.genre}"/>-->
-<!--        <select name="sort" class="form-input" style="width:auto;padding:9px 36px 9px 14px;font-size:0.83rem"-->
-<!--                onchange="this.form.submit()">-->
-<!--          <option value="latest"   th:selected="${param.sort == 'latest'}">Mới Nhất</option>-->
-<!--          <option value="topRated" th:selected="${param.sort == 'topRated'}">Đánh Giá Cao</option>-->
-<!--          <option value="trending" th:selected="${param.sort == 'trending'}">Thịnh Hành</option>-->
-<!--          <option value="viewCount" th:selected="${param.sort == 'viewCount'}">Xem Nhiều</option>-->
-<!--        </select>-->
-<!--      </form>-->
+      <!-- Page Title -->
+      <div
+        style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px">
+        <div>
+          <h1
+            style="font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:5px;color:#e8b84b;margin-bottom:6px"
+            th:text="${pageTitle ?: 'TẤT CẢ PHIM'}">TẤT CẢ PHIM</h1>
 
-      <form th:action="@{/movies}" method="get" id="filterForm">
-        <input type="hidden" name="type" th:value="${type}"/>
-        <input type="hidden" name="genre" th:value="${genre}"/>
+          <p style="font-size:0.83rem;color:#605848" th:text="${movies.totalElements} + ' bộ phim được tìm thấy'">0 bộ
+            phim</p>
+        </div>
 
-        <select name="sort" class="form-input" onchange="this.form.submit()">
-          <option value="latest"   th:selected="${sort == 'latest'}">Mới Nhất</option>
-          <option value="topRated" th:selected="${sort == 'topRated'}">Đánh Giá Cao</option>
-          <option value="trending" th:selected="${sort == 'trending'}">Thịnh Hành</option>
-          <option value="viewCount" th:selected="${sort == 'viewCount'}">Xem Nhiều</option>
-        </select>
-      </form>
+        <!-- Sort dropdown -->
+        <!--      <form th:action="@{/movies}" method="get" style="display:flex;align-items:center;gap:10px">-->
+        <!--        <input type="hidden" name="type" th:value="${param.type}"/>-->
+        <!--        <input type="hidden" name="genre" th:value="${param.genre}"/>-->
+        <!--        <select name="sort" class="form-input" style="width:auto;padding:9px 36px 9px 14px;font-size:0.83rem"-->
+        <!--                onchange="this.form.submit()">-->
+        <!--          <option value="latest"   th:selected="${param.sort == 'latest'}">Mới Nhất</option>-->
+        <!--          <option value="topRated" th:selected="${param.sort == 'topRated'}">Đánh Giá Cao</option>-->
+        <!--          <option value="trending" th:selected="${param.sort == 'trending'}">Thịnh Hành</option>-->
+        <!--          <option value="viewCount" th:selected="${param.sort == 'viewCount'}">Xem Nhiều</option>-->
+        <!--        </select>-->
+        <!--      </form>-->
+
+        <form th:action="@{/movies}" method="get" id="filterForm">
+          <input type="hidden" name="type" th:value="${type}" />
+          <input type="hidden" name="genre" th:value="${genre}" />
+          <input type="hidden" name="year" th:if="${year != null}" th:value="${year}" />
+          <input type="hidden" name="status" th:if="${status != null}" th:value="${status}" />
+          <input type="hidden" name="actor" th:if="${actor != null}" th:value="${actor}" />
+          <input type="hidden" name="country" th:if="${country != null}" th:value="${country}" />
+
+          <select name="sort" class="form-input" onchange="this.form.submit()">
+            <option value="latest" th:selected="${sort == 'latest'}">Mới Nhất</option>
+            <option value="topRated" th:selected="${sort == 'topRated'}">Đánh Giá Cao</option>
+            <option value="trending" th:selected="${sort == 'trending'}">Thịnh Hành</option>
+            <option value="viewCount" th:selected="${sort == 'viewCount'}">Xem Nhiều</option>
+          </select>
+        </form>
 
 
-    </div>
+      </div>
 
-    <div style="display:grid;grid-template-columns:240px 1fr;gap:32px;align-items:start">
+      <div style="display:grid;grid-template-columns:240px 1fr;gap:32px;align-items:start">
 
-      <!-- ── FILTER SIDEBAR ── -->
-      <aside>
-        <form th:action="@{/movies}" method="get">
+        <!-- ── FILTER SIDEBAR ── -->
+        <aside>
+          <form th:action="@{/movies}" method="get">
 
-          <div class="card" style="margin-bottom:16px">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">Loại Phim</div>
-            <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="card" style="margin-bottom:16px">
+              <div
+                style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">
+                Loại Phim</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
 
-              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="radio" name="type" value=""
-                       th:checked="${param.type == null or param.type == ''}"
-                       style="accent-color:#e8b84b"/>
-                <span style="font-size:0.84rem;color:#a09880">🎬 Tất Cả</span>
-              </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="radio" name="type" value="" th:checked="${param.type == null or param.type == ''}"
+                    style="accent-color:#e8b84b" />
+                  <span style="font-size:0.84rem;color:#a09880">🎬 Tất Cả</span>
+                </label>
 
-              <label th:each="t : ${types}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="radio" name="type" th:value="${t.name()}"
-                       th:checked="${param.type == t.name()}"
-                       style="accent-color:#e8b84b"/>
-                <span style="font-size:0.84rem;color:#a09880"
-                      th:text="${t.name() == 'MOVIE'   ? '🎥 Phim Lẻ'  :
+                <label th:each="t : ${types}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="radio" name="type" th:value="${t.name()}" th:checked="${param.type == t.name()}"
+                    style="accent-color:#e8b84b" />
+                  <span style="font-size:0.84rem;color:#a09880" th:text="${t.name() == 'MOVIE'   ? '🎥 Phim Lẻ'  :
                                 (t.name() == 'SERIES'  ? '📺 Phim Bộ'  :
                                 (t.name() == 'ANIME'   ? '🎌 Anime'    : '📡 TV Show'))}">
-                </span>
-              </label>
+                  </span>
+                </label>
 
+              </div>
             </div>
-          </div>
 
-          <!-- Thể loại -->
-          <div class="card" style="margin-bottom:16px">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">Thể Loại</div>
-            <div style="display:flex;flex-direction:column;gap:7px;max-height:240px;overflow-y:auto">
-              <label th:each="genre : ${genres}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="radio" name="genre" th:value="${genre.slug}"
-                       th:checked="${param.genre == genre.slug}"
-                       style="accent-color:#e8b84b"/>
-                <span style="font-size:0.83rem;color:#a09880" th:text="${genre.name}">Thể loại</span>
-              </label>
+            <!-- Thể loại -->
+            <div class="card" style="margin-bottom:16px">
+              <div
+                style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">
+                Thể Loại</div>
+              <div style="display:flex;flex-direction:column;gap:7px;max-height:240px;overflow-y:auto">
+                <label th:each="genre : ${genres}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="radio" name="genre" th:value="${genre.slug}" th:checked="${param.genre == genre.slug}"
+                    style="accent-color:#e8b84b" />
+                  <span style="font-size:0.83rem;color:#a09880" th:text="${genre.name}">Thể loại</span>
+                </label>
+              </div>
             </div>
-          </div>
 
-          <!-- Năm -->
-          <div class="card" style="margin-bottom:16px">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">Năm Phát Hành</div>
-            <select name="year" class="form-input" style="font-size:0.83rem">
-              <option value="">Tất Cả</option>
-              <option th:each="year : ${years}" th:value="${year}" th:text="${year}"
-                      th:selected="${param.year == year.toString()}">2024</option>
-            </select>
-          </div>
-
-          <!-- Trạng thái -->
-          <div class="card" style="margin-bottom:20px">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">Trạng Thái</div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="radio" name="status" value="" th:checked="${param.status == null}" style="accent-color:#e8b84b"/>
-                <span style="font-size:0.83rem;color:#a09880">Tất Cả</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="radio" name="status" value="COMPLETED" th:checked="${param.status == 'COMPLETED'}" style="accent-color:#e8b84b"/>
-                <span style="font-size:0.83rem;color:#a09880">Hoàn Thành</span>
-              </label>
-              <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-                <input type="radio" name="status" value="ONGOING" th:checked="${param.status == 'ONGOING'}" style="accent-color:#e8b84b"/>
-                <span style="font-size:0.83rem;color:#a09880">Đang Chiếu</span>
-              </label>
+            <!-- Năm -->
+            <div class="card" style="margin-bottom:16px">
+              <div
+                style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">
+                Năm Phát Hành</div>
+              <select name="year" class="form-input" style="font-size:0.83rem">
+                <option value="">Tất Cả</option>
+                <option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+                  th:selected="${year != null and year == y}">2024</option>
+              </select>
             </div>
+
+            <!-- Trạng thái -->
+            <div class="card" style="margin-bottom:20px">
+              <div
+                style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">
+                Trạng Thái</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="radio" name="status" value="" th:checked="${status == null or status == ''}"
+                    style="accent-color:#e8b84b" />
+                  <span style="font-size:0.83rem;color:#a09880">Tất Cả</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="radio" name="status" value="COMPLETED" th:checked="${status == 'COMPLETED'}"
+                    style="accent-color:#e8b84b" />
+                  <span style="font-size:0.83rem;color:#a09880">Hoàn Thành</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                  <input type="radio" name="status" value="ONGOING" th:checked="${status == 'ONGOING'}"
+                    style="accent-color:#e8b84b" />
+                  <span style="font-size:0.83rem;color:#a09880">Đang Chiếu</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Quốc Gia -->
+            <div class="card" style="margin-bottom:16px">
+              <div
+                style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:14px">
+                Quốc Gia</div>
+              <select name="country" class="form-input" style="font-size:0.83rem">
+                <option value="">Tất Cả</option>
+                <option th:each="c : ${countries}" th:value="${c}" th:text="${c}"
+                  th:selected="${country != null and country == c}">Việt Nam</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-gold w-full">🔍 Lọc Phim</button>
+            <a th:href="@{/movies}"
+              style="display:block;text-align:center;margin-top:10px;font-size:0.78rem;color:#605848;cursor:pointer">Xóa
+              bộ lọc</a>
+          </form>
+        </aside>
+
+        <!-- ── MOVIE GRID ── -->
+        <div>
+
+          <div th:if="${movies.totalElements == 0}" style="text-align:center;padding:80px 0">
+            <div style="font-size:4rem;margin-bottom:16px">🎬</div>
+            <div
+              style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#605848;margin-bottom:8px">
+              KHÔNG TÌM THẤY PHIM</div>
+            <p style="font-size:0.85rem;color:#605848">Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
+            <a th:href="@{/movies}" class="btn btn-outline" style="margin-top:20px">Xem Tất Cả</a>
           </div>
 
-          <button type="submit" class="btn btn-gold w-full">🔍 Lọc Phim</button>
-          <a th:href="@{/movies}" style="display:block;text-align:center;margin-top:10px;font-size:0.78rem;color:#605848;cursor:pointer">Xóa bộ lọc</a>
-        </form>
-      </aside>
+          <!-- Movie grid -->
+          <div th:unless="${movies.totalElements == 0}" class="movie-grid movie-grid-4" style="margin-bottom:32px">
+            <th:block th:each="movie : ${movies.content}">
+              <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
+            </th:block>
+          </div>
 
-      <!-- ── MOVIE GRID ── -->
-      <div>
+          <!-- Pagination -->
+          <div th:unless="${movies.totalElements == 0}" class="pagination">
 
-        <div th:if="${movies.totalElements == 0}" style="text-align:center;padding:80px 0">
-          <div style="font-size:4rem;margin-bottom:16px">🎬</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#605848;margin-bottom:8px">KHÔNG TÌM THẤY PHIM</div>
-          <p style="font-size:0.85rem;color:#605848">Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
-          <a th:href="@{/movies}" class="btn btn-outline" style="margin-top:20px">Xem Tất Cả</a>
-        </div>
+            <!-- Prev -->
+            <a th:if="${movies.number > 0}"
+              th:href="@{/movies(page=${movies.number - 1}, size=${movies.size}, sort=${sort}, type=${type}, genre=${genre}, year=${year}, status=${status})}"
+              class="page-btn">‹</a>
+            <span th:unless="${movies.number > 0}" class="page-btn" style="opacity:0.3">‹</span>
 
-        <!-- Movie grid -->
-        <div th:unless="${movies.totalElements == 0}" class="movie-grid movie-grid-4" style="margin-bottom:32px">
-          <th:block th:each="movie : ${movies.content}">
-            <div th:replace="~{fragments/movie-card :: card(movie=${movie})}"></div>
-          </th:block>
-        </div>
+            <!-- Pages -->
+            <a th:each="i : ${#numbers.sequence(0, movies.totalPages - 1)}"
+              th:if="${i >= movies.number - 2 and i <= movies.number + 2}"
+              th:href="@{/movies(page=${i}, size=${movies.size}, sort=${sort}, type=${type}, genre=${genre}, year=${year}, status=${status})}"
+              class="page-btn" th:classappend="${i == movies.number} ? ' active'" th:text="${i + 1}">1</a>
 
-        <!-- Pagination -->
-        <div th:unless="${movies.totalElements == 0}" class="pagination">
+            <!-- Next -->
+            <a th:if="${movies.number < movies.totalPages - 1}"
+              th:href="@{/movies(page=${movies.number + 1}, size=${movies.size}, sort=${sort}, type=${type}, genre=${genre}, year=${year}, status=${status})}"
+              class="page-btn">›</a>
+            <span th:unless="${movies.number < movies.totalPages - 1}" class="page-btn" style="opacity:0.3">›</span>
 
-          <!-- Prev -->
-          <a th:if="${movies.number > 0}"
-             th:href="@{/movies(page=${movies.number - 1}, size=${movies.size}, sort=${param.sort}, type=${param.type}, genre=${param.genre})}"
-             class="page-btn">‹</a>
-          <span th:unless="${movies.number > 0}" class="page-btn" style="opacity:0.3">‹</span>
-
-          <!-- Pages -->
-          <a th:each="i : ${#numbers.sequence(0, movies.totalPages - 1)}"
-             th:if="${i >= movies.number - 2 and i <= movies.number + 2}"
-             th:href="@{/movies(page=${i}, size=${movies.size}, sort=${param.sort}, type=${param.type}, genre=${param.genre})}"
-             class="page-btn"
-             th:classappend="${i == movies.number} ? ' active'"
-             th:text="${i + 1}">1</a>
-
-          <!-- Next -->
-          <a th:if="${movies.number < movies.totalPages - 1}"
-             th:href="@{/movies(page=${movies.number + 1}, size=${movies.size}, sort=${param.sort}, type=${param.type}, genre=${param.genre})}"
-             class="page-btn">›</a>
-          <span th:unless="${movies.number < movies.totalPages - 1}" class="page-btn" style="opacity:0.3">›</span>
-
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<div th:replace="~{fragments/footer :: footer}"></div>
+  <div th:replace="~{fragments/footer :: footer}"></div>
 </body>
+
 </html>
