@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Phim — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="page-wrapper">
+        <div class="admin-layout">
+            <div th:replace="~{fragments/sidebar :: sidebar}" th:with="adminPage='movies'"></div>
+
+            <main class="admin-content">
+                <div
+                    style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px">
+                    <div>
+                        <h1
+                            style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:4px;color:#e8b84b">
+                            QUẢN LÝ PHIM</h1>
+                        <p style="font-size:0.83rem;color:#605848" th:text="${movies.totalElements} + ' phim'">0 phim
+                        </p>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <form th:action="@{/admin/movies}" method="get" style="display:flex;gap:8px">
+                            <input type="text" name="q" th:value="${param.q}" placeholder="Tìm phim..."
+                                class="form-input" style="min-width:240px;font-size:0.83rem;padding:8px 14px" />
+                            <button type="submit" class="btn btn-gold btn-sm">Tìm</button>
+                        </form>
+                        <a th:href="@{/admin/movies/create}" class="btn btn-gold btn-sm">➕ Thêm Phim</a>
+                    </div>
+                </div>
+
+                <!-- Seed quick action -->
+                <div class="card"
+                    style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+                    <div>
+                        <div style="font-size:0.85rem;font-weight:600;color:#e8e0d0">🔄 Import phim từ OPhim API</div>
+                        <div style="font-size:0.75rem;color:#605848">Tự động fetch và lưu phim mới vào database</div>
+                    </div>
+                    <form th:action="@{/admin/seed}" method="post" style="display:flex;gap:8px;align-items:center">
+                        <label style="font-size:0.78rem;color:#a09880">Số page:</label>
+                        <input type="number" name="pages" value="1" min="1" max="20" class="form-input"
+                            style="width:70px;padding:6px 10px;font-size:0.83rem" />
+                        <button type="submit" class="btn btn-sm"
+                            style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#34d399">
+                            🚀 Seed
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Success/Error -->
+                <div th:if="${success}" class="alert alert-success" style="margin-bottom:16px">✅ <span
+                        th:text="${success}"></span></div>
+                <div th:if="${error}" class="alert alert-error" style="margin-bottom:16px">⚠️ <span
+                        th:text="${error}"></span></div>
+
+                <div class="card">
+                    <div style="overflow-x:auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Phim</th>
+                                    <th>Loại</th>
+                                    <th>Năm</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Lượt Xem</th>
+                                    <th>Rating</th>
+                                    <th>Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="movie : ${movies.content}">
+                                    <td style="color:#605848;font-size:0.78rem" th:text="${movie.id}">1</td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:10px">
+                                            <div
+                                                style="width:36px;height:54px;border-radius:4px;overflow:hidden;flex-shrink:0;background:#1a1a22">
+                                                <img th:if="${movie.posterUrl != null}" th:src="${movie.posterUrl}"
+                                                    style="width:100%;height:100%;object-fit:cover" />
+                                                <div th:unless="${movie.posterUrl != null}"
+                                                    style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.8rem">
+                                                    🎬</div>
+                                            </div>
+                                            <div>
+                                                <div style="font-weight:600;font-size:0.85rem;color:#e8e0d0"
+                                                    th:text="${movie.title}">Tên</div>
+                                                <div style="font-size:0.7rem;color:#605848" th:text="${movie.slug}">slug
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span
+                                            style="font-size:0.75rem;padding:2px 8px;border-radius:4px;background:rgba(99,102,241,0.15);color:#818cf8"
+                                            th:text="${movie.type}">MOVIE</span>
+                                    </td>
+                                    <td style="color:#a09880;font-size:0.83rem" th:text="${movie.releaseYear}">2024</td>
+                                    <td>
+                                        <span th:if="${movie.status.name() == 'COMPLETED'}" class="badge badge-green">✅
+                                            Hoàn Thành</span>
+                                        <span th:if="${movie.status.name() == 'ONGOING'}" class="badge badge-gold">🔄
+                                            Đang Chiếu</span>
+                                    </td>
+                                    <td style="color:#a09880;font-size:0.83rem"
+                                        th:text="${#numbers.formatInteger(movie.viewCount,1,'COMMA')}">0</td>
+                                    <td>
+                                        <span style="color:#e8b84b;font-size:0.83rem">⭐ <span
+                                                th:text="${#numbers.formatDecimal(movie.avgRating,1,1)}">0.0</span></span>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex;gap:6px">
+                                            <a th:href="@{/movies/{s}(s=${movie.slug})}" target="_blank"
+                                                style="padding:4px 10px;border-radius:4px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#34d399;font-size:0.72rem;text-decoration:none"
+                                                title="Xem">👁</a>
+                                            <a th:href="@{/admin/movies/{id}/edit(id=${movie.id})}"
+                                                style="padding:4px 10px;border-radius:4px;background:rgba(200,146,42,0.1);border:1px solid rgba(200,146,42,0.2);color:#e8b84b;font-size:0.72rem;text-decoration:none"
+                                                title="Sửa">✏️</a>
+                                            <button onclick="confirmDelete(this)" th:data-id="${movie.id}"
+                                                th:data-name="${movie.title}"
+                                                style="padding:4px 10px;border-radius:4px;background:rgba(232,64,85,0.1);border:1px solid rgba(232,64,85,0.2);color:#e84055;font-size:0.72rem;cursor:pointer"
+                                                title="Xóa">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${movies.totalElements == 0}">
+                                    <td colspan="8" style="text-align:center;padding:32px;color:#605848">Không tìm thấy
+                                        phim nào</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination" style="margin-top:24px" th:if="${movies.totalPages > 1}">
+                        <a th:if="${movies.hasPrevious()}"
+                            th:href="@{/admin/movies(page=${movies.number - 1}, q=${param.q})}" class="page-btn">‹</a>
+                        <a th:each="i : ${#numbers.sequence(0, movies.totalPages - 1)}"
+                            th:if="${i >= (movies.number - 2) and i <= (movies.number + 2)}"
+                            th:href="@{/admin/movies(page=${i}, q=${param.q})}" class="page-btn"
+                            th:classappend="${i == movies.number} ? ' active'" th:text="${i + 1}">1</a>
+                        <a th:if="${movies.hasNext()}"
+                            th:href="@{/admin/movies(page=${movies.number + 1}, q=${param.q})}" class="page-btn">›</a>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Delete confirm modal -->
+    <div id="deleteModal"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Xác Nhận Xóa</div>
+                <button onclick="closeDeleteModal()" class="modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="color:#a09880;font-size:0.9rem">Bạn có chắc muốn xóa phim <strong id="deleteMovieName"
+                        style="color:#e8b84b"></strong>?</p>
+                <p style="color:#e84055;font-size:0.8rem;margin-top:8px">⚠️ Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeDeleteModal()" class="btn btn-ghost btn-sm">Hủy</button>
+                <form id="deleteForm" method="post" style="display:inline">
+                    <button type="submit" class="btn btn-sm"
+                        style="background:rgba(232,64,85,0.15);border:1px solid rgba(232,64,85,0.3);color:#e84055">🗑️
+                        Xóa Phim</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(btn) {
+            document.getElementById('deleteMovieName').textContent = btn.dataset.name;
+            document.getElementById('deleteForm').action = '/admin/movies/' + btn.dataset.id + '/delete';
+            document.getElementById('deleteModal').style.display = 'flex';
+        }
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

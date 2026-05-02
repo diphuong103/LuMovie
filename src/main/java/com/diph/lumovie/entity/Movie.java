@@ -30,12 +30,15 @@ public class Movie extends BaseEntity {
     private String backdropUrl;
     private Integer releaseYear;
     private Integer duration;
+    @Column(columnDefinition = "TEXT")
     private String director;
+    @Column(columnDefinition = "TEXT")
     private String actors;
     @Builder.Default
     private Double avgRating = 0.0;
     @Builder.Default
     private Long viewCount = 0L;
+    @Column(columnDefinition = "TEXT")
     private String country;
     private String language;
     private String quality;

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Thể Loại — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="page-wrapper">
+        <div class="admin-layout">
+            <div th:replace="~{fragments/sidebar :: sidebar}" th:with="adminPage='genres'"></div>
+
+            <main class="admin-content">
+                <div style="margin-bottom:28px">
+                    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:4px;color:#e8b84b">
+                        QUẢN LÝ THỂ LOẠI</h1>
+                    <p style="font-size:0.83rem;color:#605848" th:text="${#lists.size(genres)} + ' thể loại'">0 thể loại
+                    </p>
+                </div>
+
+                <div th:if="${success}" class="alert alert-success" style="margin-bottom:16px">✅ <span
+                        th:text="${success}"></span></div>
+
+                <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start">
+
+                    <!-- Genre table -->
+                    <div class="card">
+                        <div style="overflow-x:auto">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tên</th>
+                                        <th>Slug</th>
+                                        <th>Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="g : ${genres}">
+                                        <td style="color:#605848;font-size:0.78rem" th:text="${g.id}">1</td>
+                                        <td style="font-weight:600;color:#e8e0d0;font-size:0.85rem" th:text="${g.name}">
+                                            Hành Động</td>
+                                        <td style="color:#605848;font-size:0.82rem" th:text="${g.slug}">hanh-dong</td>
+                                        <td>
+                                            <form th:action="@{/admin/genres/{id}/delete(id=${g.id})}" method="post"
+                                                onsubmit="return confirm('Xóa thể loại này?')">
+                                                <button type="submit"
+                                                    style="padding:4px 10px;border-radius:4px;background:rgba(232,64,85,0.1);border:1px solid rgba(232,64,85,0.2);color:#e84055;font-size:0.72rem;cursor:pointer">🗑️</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(genres)}">
+                                        <td colspan="4" style="text-align:center;padding:32px;color:#605848">Chưa có thể
+                                            loại nào</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add new genre -->
+                    <div class="card">
+                        <div
+                            style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:3px;color:#e8b84b;margin-bottom:16px">
+                            ➕ Thêm Thể Loại</div>
+                        <form th:action="@{/admin/genres/create}" method="post">
+                            <div class="form-group">
+                                <label class="form-label">Tên <span style="color:#e84055">*</span></label>
+                                <input type="text" name="name" class="form-input" required placeholder="VD: Hành Động"
+                                    oninput="genSlug(this.value)" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Slug <span style="color:#e84055">*</span></label>
+                                <input type="text" name="slug" id="genreSlug" class="form-input" required
+                                    placeholder="hanh-dong" />
+                            </div>
+                            <button type="submit" class="btn btn-gold w-full"
+                                style="justify-content:center">Thêm</button>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function genSlug(name) {
+            const slug = name.toLowerCase()
+                .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
+                .replace(/[èéẹẻẽêềếệểễ]/g, 'e')
+                .replace(/[ìíịỉĩ]/g, 'i')
+                .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o')
+                .replace(/[ùúụủũưừứựửữ]/g, 'u')
+                .replace(/[ỳýỵỷỹ]/g, 'y')
+                .replace(/đ/g, 'd')
+                .replace(/[^a-z0-9\s-]/g, '')
+                .trim().replace(/\s+/g, '-');
+            document.getElementById('genreSlug').value = slug;
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản Lý Bình Luận — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="page-wrapper">
+        <div class="admin-layout">
+            <div th:replace="~{fragments/sidebar :: sidebar}" th:with="adminPage='comments'"></div>
+
+            <main class="admin-content">
+                <div style="margin-bottom:28px">
+                    <h1 style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:4px;color:#e8b84b">
+                        QUẢN LÝ BÌNH LUẬN</h1>
+                    <p style="font-size:0.83rem;color:#605848" th:text="${comments.totalElements} + ' bình luận'">0 bình
+                        luận</p>
+                </div>
+
+                <div th:if="${success}" class="alert alert-success" style="margin-bottom:16px">✅ <span
+                        th:text="${success}"></span></div>
+
+                <div class="card">
+                    <div style="overflow-x:auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Người Dùng</th>
+                                    <th>Phim</th>
+                                    <th>Nội Dung</th>
+                                    <th>Ngày</th>
+                                    <th>Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="c : ${comments.content}">
+                                    <td style="color:#605848;font-size:0.78rem" th:text="${c.id}">1</td>
+                                    <td>
+                                        <div style="display:flex;align-items:center;gap:8px">
+                                            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#c8922a,#e8b84b);
+                                display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;color:#0a0a0e"
+                                                th:text="${c.user != null ? #strings.substring(c.user.username,0,1).toUpperCase() : '?'}">
+                                                U</div>
+                                            <span style="font-size:0.83rem;color:#e8e0d0"
+                                                th:text="${c.user?.username ?: 'Ẩn danh'}">User</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a th:if="${c.movie != null}" th:href="@{/movies/{s}(s=${c.movie.slug})}"
+                                            target="_blank" style="color:#e8b84b;text-decoration:none;font-size:0.83rem"
+                                            th:text="${c.movie.title}">Phim</a>
+                                    </td>
+                                    <td>
+                                        <div style="max-width:320px;font-size:0.82rem;color:#a09880;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+                                            th:text="${c.content}">Nội dung</div>
+                                    </td>
+                                    <td style="color:#605848;font-size:0.78rem"
+                                        th:text="${#temporals.format(c.createdAt,'dd/MM/yyyy HH:mm')}">01/01</td>
+                                    <td>
+                                        <form th:action="@{/admin/comments/{id}/delete(id=${c.id})}" method="post"
+                                            onsubmit="return confirm('Xóa bình luận này?')">
+                                            <button type="submit"
+                                                style="padding:4px 10px;border-radius:4px;background:rgba(232,64,85,0.1);border:1px solid rgba(232,64,85,0.2);color:#e84055;font-size:0.72rem;cursor:pointer">🗑️</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${comments.totalElements == 0}">
+                                    <td colspan="6" style="text-align:center;padding:32px;color:#605848">Chưa có bình
+                                        luận nào</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination" style="margin-top:24px" th:if="${comments.totalPages > 1}">
+                        <a th:if="${comments.hasPrevious()}" th:href="@{/admin/comments(page=${comments.number - 1})}"
+                            class="page-btn">‹</a>
+                        <a th:each="i : ${#numbers.sequence(0, comments.totalPages - 1)}"
+                            th:if="${i >= (comments.number - 2) and i <= (comments.number + 2)}"
+                            th:href="@{/admin/comments(page=${i})}" class="page-btn"
+                            th:classappend="${i == comments.number} ? ' active'" th:text="${i + 1}">1</a>
+                        <a th:if="${comments.hasNext()}" th:href="@{/admin/comments(page=${comments.number + 1})}"
+                            class="page-btn">›</a>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -90,4 +90,16 @@ public interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecific
 
   @Query("SELECT DISTINCT m.country FROM Movie m WHERE m.country IS NOT NULL AND m.country <> '' ORDER BY m.country")
   List<String> findDistinctCountries();
+
+  // Admin: recent movies with genres eager-loaded
+  @Query("SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres ORDER BY m.createdAt DESC")
+  List<Movie> findRecentWithGenres(Pageable pageable);
+
+  // Admin: search movies with genres eager-loaded
+  @Query(value = "SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres WHERE LOWER(m.title) LIKE LOWER(CONCAT('%',:q,'%')) ORDER BY m.createdAt DESC", countQuery = "SELECT COUNT(DISTINCT m) FROM Movie m WHERE LOWER(m.title) LIKE LOWER(CONCAT('%',:q,'%'))")
+  Page<Movie> searchByTitleWithGenres(@Param("q") String q, Pageable pageable);
+
+  // Admin: all movies paged with genres eager-loaded
+  @Query(value = "SELECT DISTINCT m FROM Movie m LEFT JOIN FETCH m.genres", countQuery = "SELECT COUNT(m) FROM Movie m")
+  Page<Movie> findAllWithGenres(Pageable pageable);
 }

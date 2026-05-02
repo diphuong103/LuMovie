@@ -617,93 +617,11 @@ public class WebController {
 
     /*
      * ══════════════════════════════════════
-     * ADMIN — DASHBOARD
-     * ══════════════════════════════════════
-     */
-    @GetMapping("/admin")
-    public String adminDashboard(Model model) {
-        model.addAttribute("totalMovies", movieRepository.count());
-        model.addAttribute("totalUsers", userRepository.count());
-        model.addAttribute("totalComments", commentRepository.count());
-
-        Long sumViews = movieRepository.sumTotalViews();
-        long totalViews = sumViews != null ? sumViews : 0L;
-        model.addAttribute("totalViews", totalViews);
-
-        LocalDateTime startOfMonth = LocalDateTime.now()
-                .withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        model.addAttribute("newUsersThisMonth", userRepository.countByCreatedAtAfter(startOfMonth));
-        model.addAttribute("newMoviesThisMonth", movieRepository.countByCreatedAtAfter(startOfMonth));
-
-        model.addAttribute("recentMovies", movieRepository.findAll(
-                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent());
-        model.addAttribute("recentUsers", userRepository.findTop10ByOrderByCreatedAtDesc());
-
-        return "admin/dashboard";
-    }
-
-    /*
-     * ══════════════════════════════════════
-     * ADMIN — USER MANAGEMENT
-     * ══════════════════════════════════════
-     */
-    @GetMapping("/admin/users")
-    public String adminUserList(@RequestParam(required = false) String role,
-            @RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") int page,
-            Model model) {
-
-        Pageable pageable = PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<User> users;
-
-        if (q != null && !q.isBlank()) {
-            users = userRepository.searchUsers(q, pageable);
-        } else if (role != null && !role.isBlank()) {
-            try {
-                Role roleEnum = Role.valueOf(role);
-                users = userRepository.findByRole(roleEnum, pageable);
-            } catch (IllegalArgumentException e) {
-                users = userRepository.findAll(pageable);
-            }
-        } else {
-            users = userRepository.findAll(pageable);
-        }
-
-        model.addAttribute("users", users);
-        return "admin/user-list";
-    }
-
-    @PostMapping("/admin/users/{id}/toggle-role")
-    @Transactional
-    public String toggleUserRole(@PathVariable Long id, RedirectAttributes redirect) {
-        User user = userRepository.findById(id).orElseThrow();
-
-        switch (user.getRole()) {
-            case ROLE_USER -> user.setRole(Role.ROLE_VIP);
-            case ROLE_VIP -> user.setRole(Role.ROLE_ADMIN);
-            case ROLE_ADMIN -> user.setRole(Role.ROLE_USER);
-        }
-        userRepository.save(user);
-
-        redirect.addFlashAttribute("success",
-                "Đã đổi vai trò của " + user.getUsername() + " thành " + user.getRole().name());
-        return "redirect:/admin/users";
-    }
-
-    @PostMapping("/admin/users/{id}/toggle-status")
-    @Transactional
-    public String toggleUserStatus(@PathVariable Long id, RedirectAttributes redirect) {
-        User user = userRepository.findById(id).orElseThrow();
-        user.setEnabled(!user.isEnabled());
-        userRepository.save(user);
-
-        String status = user.isEnabled() ? "mở khóa" : "khóa";
-        redirect.addFlashAttribute("success",
-                "Đã " + status + " tài khoản " + user.getUsername());
-        return "redirect:/admin/users";
-    }
-
-    /*
+     * // ══════════════════════════════════════
+     * // Admin routes moved to AdminWebController.java
+     * // ══════════════════════════════════════
+     * 
+     * /*
      * ══════════════════════════════════════
      * HELPERS
      * ══════════════════════════════════════
