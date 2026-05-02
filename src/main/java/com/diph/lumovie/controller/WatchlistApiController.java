@@ -1,12 +1,6 @@
-package com.diph.lumovie.controller.api;
+package com.diph.lumovie.controller;
 
 import com.diph.lumovie.dto.response.ApiResponse;
-import com.diph.lumovie.entity.Movie;
-import com.diph.lumovie.entity.User;
-import com.diph.lumovie.entity.Watchlist;
-import com.diph.lumovie.repository.MovieRepository;
-import com.diph.lumovie.repository.UserRepository;
-import com.diph.lumovie.repository.WatchlistRepository;
 import com.diph.lumovie.service.WatchlistService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

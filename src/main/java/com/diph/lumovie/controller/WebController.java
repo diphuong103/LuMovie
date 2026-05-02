@@ -116,7 +116,7 @@ public class WebController {
                     movieService.getRelated(movie.getId(), 6));
 
             model.addAttribute("comments",
-                    commentRepository.findByMovieIdOrderByCreatedAtDesc(movie.getId()));
+                    commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtDesc(movie.getId()));
 
             model.addAttribute("ratingCount",
                     ratingRepository.findByMovieId(movie.getId()).size());
@@ -159,6 +159,7 @@ public class WebController {
     @PostMapping("/movies/{id}/comment")
     public String addComment(@PathVariable Long id,
             @RequestParam String content,
+            @RequestParam(required = false) Long parentId,
             @RequestParam(required = false) String redirect,
             Authentication auth) {
         if (auth == null || auth instanceof AnonymousAuthenticationToken)
@@ -176,12 +177,64 @@ public class WebController {
         comment.setUser(user);
         comment.setMovie(movie);
         comment.setContent(content.trim());
+
+        if (parentId != null) {
+            commentRepository.findById(parentId).ifPresent(comment::setParent);
+        }
+
         commentRepository.save(comment);
 
         if (redirect != null && !redirect.isBlank()) {
             return "redirect:" + redirect;
         }
         return "redirect:/movies/" + movie.getSlug() + "#comments";
+    }
+
+    /*
+     * ══════════════════════════════════════
+     * API: Bình luận (AJAX – không reload trang)
+     * ══════════════════════════════════════
+     */
+    @PostMapping("/api/movies/{id}/comment")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public org.springframework.http.ResponseEntity<?> addCommentAjax(
+            @PathVariable Long id,
+            @org.springframework.web.bind.annotation.RequestBody java.util.Map<String, String> body,
+            Authentication auth) {
+        if (auth == null || auth instanceof AnonymousAuthenticationToken)
+            return org.springframework.http.ResponseEntity.status(401)
+                    .body(java.util.Map.of("error", "Chưa đăng nhập"));
+
+        String content = body.get("content");
+        String parentIdStr = body.get("parentId");
+
+        if (content == null || content.isBlank())
+            return org.springframework.http.ResponseEntity.badRequest()
+                    .body(java.util.Map.of("error", "Nội dung không được để trống"));
+
+        User user = userRepository.findByUsername(auth.getName()).orElseThrow();
+        Movie movie = movieRepository.findById(id).orElseThrow();
+
+        Comment comment = new Comment();
+        comment.setUser(user);
+        comment.setMovie(movie);
+        comment.setContent(content.trim());
+
+        if (parentIdStr != null && !parentIdStr.isBlank()) {
+            commentRepository.findById(Long.parseLong(parentIdStr)).ifPresent(comment::setParent);
+        }
+
+        commentRepository.save(comment);
+
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("id", comment.getId());
+        result.put("content", comment.getContent());
+        result.put("username", user.getUsername());
+        result.put("createdAt", java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                .format(java.time.LocalDateTime.now()));
+        result.put("parentId", parentIdStr);
+
+        return org.springframework.http.ResponseEntity.ok(result);
     }
 
     /*
@@ -282,7 +335,7 @@ public class WebController {
         }
 
         model.addAttribute("comments",
-                commentRepository.findByMovieIdOrderByCreatedAtDesc(movie.getId()));
+                commentRepository.findByMovieIdAndParentIsNullOrderByCreatedAtDesc(movie.getId()));
 
         model.addAttribute("recommended", movieService.getRelated(movie.getId(), 6));
         movieService.incrementView(movie.getId());

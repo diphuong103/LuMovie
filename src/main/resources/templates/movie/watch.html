@@ -801,35 +801,64 @@
 
         <!-- Comments -->
         <div class="cmt-section">
-          <div class="cmt-title">💬 Bình Luận <span
+          <div class="cmt-title">💬 Bình Luận <span id="cmt-count"
               style="font-size:0.72rem;color:#605848;font-family:'DM Sans',sans-serif;font-weight:400;margin-left:5px"
               th:text="'(' + ${#lists.size(comments)} + ')'"></span></div>
           <div sec:authorize="isAuthenticated()">
-            <form th:action="@{/movies/{id}/comment(id=${movie.id})}" method="post">
-              <input th:if="${_csrf != null}" type="hidden" th:name="${_csrf.parameterName}"
-                th:value="${_csrf.token}" />
-              <input type="hidden" name="redirect"
-                th:value="@{/movies/{s}/watch(s=${movie.slug},ep=${currentEpisode?.episodeNumber ?: 1})}" />
-              <div class="cmt-form">
-                <div class="cmt-av"
-                  th:text="${#strings.substring(#authentication.principal.username,0,1).toUpperCase()}">U</div>
-                <textarea class="cmt-input" name="content" placeholder="Nhận xét về phim..." rows="2"></textarea>
-                <button type="submit" class="cmt-send">Gửi</button>
-              </div>
-            </form>
+            <div class="cmt-form" id="main-cmt-form">
+              <div class="cmt-av" id="current-user-av"
+                th:text="${#strings.substring(#authentication.principal.username,0,1).toUpperCase()}">U</div>
+              <textarea class="cmt-input" id="main-cmt-input" placeholder="Nhận xét về phim..." rows="2"></textarea>
+              <button type="button" class="cmt-send" onclick="submitComment()">Gửi</button>
+            </div>
           </div>
           <div sec:authorize="isAnonymous()" class="cmt-login"><a th:href="@{/auth/login}">Đăng nhập</a> để bình luận
           </div>
-          <div class="cmt-list">
-            <div th:if="${#lists.isEmpty(comments)}" class="cmt-empty">Chưa có bình luận nào 💬</div>
-            <div th:each="c : ${comments}" class="cmt-item">
-              <div class="cmt-av" th:text="${#strings.substring(c.user.username,0,1).toUpperCase()}">U</div>
-              <div class="cmt-body">
-                <div class="cmt-meta">
-                  <span class="cmt-user" th:text="${c.user.username}">User</span>
-                  <span class="cmt-time" th:text="${#temporals.format(c.createdAt,'dd/MM/yyyy HH:mm')}">01/01</span>
+          <div class="cmt-list" id="cmt-list">
+            <div th:if="${#lists.isEmpty(comments)}" class="cmt-empty" id="cmt-empty">Chưa có bình luận nào 💬</div>
+            <div th:each="c : ${comments}" th:id="'cmt-block-' + ${c.id}"
+              style="border-bottom: 1px solid rgba(255, 255, 255, 0.03); padding: 12px 0;">
+              <div class="cmt-item" style="border: none; padding: 0;">
+                <div class="cmt-av" th:text="${#strings.substring(c.user.username,0,1).toUpperCase()}">U</div>
+                <div class="cmt-body">
+                  <div class="cmt-meta">
+                    <span class="cmt-user" th:text="${c.user.username}">User</span>
+                    <span class="cmt-time" th:text="${#temporals.format(c.createdAt,'dd/MM/yyyy HH:mm')}">01/01</span>
+                  </div>
+                  <div class="cmt-text" th:text="${c.content}">Nội dung</div>
+                  <div sec:authorize="isAuthenticated()" style="margin-top: 4px;">
+                    <button class="reply-btn" th:onclick="'toggleReplyForm(' + ${c.id} + ')'"
+                      style="background: none; border: none; color: #a09880; font-size: 0.72rem; cursor: pointer; text-decoration: underline; padding: 0;">Trả
+                      lời</button>
+                  </div>
                 </div>
-                <div class="cmt-text" th:text="${c.content}">Nội dung</div>
+              </div>
+
+              <div th:id="'reply-form-' + ${c.id}" style="display: none; margin-left: 42px; margin-top: 10px;"
+                sec:authorize="isAuthenticated()">
+                <div class="cmt-form" style="margin-bottom: 0;">
+                  <div class="cmt-av" style="width: 24px; height: 24px; font-size: 0.7rem;"
+                    th:text="${#strings.substring(#authentication.principal.username,0,1).toUpperCase()}">U</div>
+                  <textarea class="cmt-input reply-input" th:data-parent-id="${c.id}" placeholder="Viết câu trả lời..."
+                    rows="1" style="min-height: 36px; padding: 6px 10px; font-size: 0.78rem;"></textarea>
+                  <button type="button" class="cmt-send" style="padding: 3px 8px; font-size: 0.7rem;"
+                    th:onclick="'submitReply(' + ${c.id} + ')'">Gửi</button>
+                </div>
+              </div>
+
+              <div th:id="'replies-' + ${c.id}" class="cmt-replies" th:if="${not #lists.isEmpty(c.replies)}"
+                style="margin-left: 42px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+                <div th:each="r : ${c.replies}" class="cmt-item" style="padding: 0; border: none;">
+                  <div class="cmt-av" style="width: 24px; height: 24px; font-size: 0.7rem;"
+                    th:text="${#strings.substring(r.user.username,0,1).toUpperCase()}">U</div>
+                  <div class="cmt-body">
+                    <div class="cmt-meta">
+                      <span class="cmt-user" th:text="${r.user.username}">User</span>
+                      <span class="cmt-time" th:text="${#temporals.format(r.createdAt,'dd/MM/yyyy HH:mm')}">01/01</span>
+                    </div>
+                    <div class="cmt-text" th:text="${r.content}" style="font-size: 0.78rem;">Nội dung</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -863,7 +892,10 @@
   </div>
   <div th:replace="~{fragments/footer :: footer}"></div>
   <script th:src="@{/js/player.js}"></script>
-  <script>
+  <script th:inline="javascript">
+    const MOVIE_ID = /*[[${movie.id}]]*/ 0;
+    const CURRENT_USER = /*[[${#authentication?.principal?.username}]]*/ null;
+
     function copyWatchLink() {
       navigator.clipboard.writeText(window.location.href).then(() => {
         const btn = event.currentTarget;
@@ -871,6 +903,118 @@
         btn.textContent = '✅ Đã Copy!';
         setTimeout(() => btn.textContent = orig, 2000);
       });
+    }
+
+    function toggleReplyForm(commentId) {
+      const form = document.getElementById('reply-form-' + commentId);
+      if (form) {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    function createCommentHTML(data, isReply) {
+      const av = data.username.charAt(0).toUpperCase();
+      const avSize = isReply ? 'width:24px;height:24px;font-size:0.7rem;' : '';
+      const textSize = isReply ? 'font-size:0.78rem;' : '';
+      return `<div class="cmt-item" style="padding:0;border:none;">
+        <div class="cmt-av" style="${avSize}">${av}</div>
+        <div class="cmt-body">
+          <div class="cmt-meta">
+            <span class="cmt-user">${data.username}</span>
+            <span class="cmt-time">${data.createdAt}</span>
+          </div>
+          <div class="cmt-text" style="${textSize}">${data.content}</div>
+          ${!isReply ? `<div style="margin-top:4px;">
+            <button class="reply-btn" onclick="toggleReplyForm(${data.id})"
+              style="background:none;border:none;color:#a09880;font-size:0.72rem;cursor:pointer;text-decoration:underline;padding:0;">Trả lời</button>
+          </div>` : ''}
+        </div>
+      </div>`;
+    }
+
+    async function submitComment() {
+      const input = document.getElementById('main-cmt-input');
+      const content = input.value.trim();
+      if (!content) return;
+
+      try {
+        const res = await fetch('/api/movies/' + MOVIE_ID + '/comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content })
+        });
+        if (res.status === 401) { window.location.href = '/auth/login'; return; }
+        const data = await res.json();
+        if (!res.ok) return;
+
+        // Remove empty message
+        const empty = document.getElementById('cmt-empty');
+        if (empty) empty.remove();
+
+        // Build new comment block
+        const block = document.createElement('div');
+        block.id = 'cmt-block-' + data.id;
+        block.style.cssText = 'border-bottom:1px solid rgba(255,255,255,0.03);padding:12px 0;';
+        block.innerHTML = createCommentHTML(data, false)
+          + `<div id="reply-form-${data.id}" style="display:none;margin-left:42px;margin-top:10px;">
+              <div class="cmt-form" style="margin-bottom:0;">
+                <div class="cmt-av" style="width:24px;height:24px;font-size:0.7rem;">${CURRENT_USER.charAt(0).toUpperCase()}</div>
+                <textarea class="cmt-input reply-input" data-parent-id="${data.id}" placeholder="Viết câu trả lời..." rows="1"
+                  style="min-height:36px;padding:6px 10px;font-size:0.78rem;"></textarea>
+                <button type="button" class="cmt-send" style="padding:3px 8px;font-size:0.7rem;"
+                  onclick="submitReply(${data.id})">Gửi</button>
+              </div>
+            </div>`;
+
+        const list = document.getElementById('cmt-list');
+        list.insertBefore(block, list.firstChild);
+        input.value = '';
+        updateCount(1);
+      } catch (e) { console.error(e); }
+    }
+
+    async function submitReply(parentId) {
+      const textarea = document.querySelector(`#reply-form-${parentId} .reply-input`);
+      const content = textarea.value.trim();
+      if (!content) return;
+
+      try {
+        const res = await fetch('/api/movies/' + MOVIE_ID + '/comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, parentId: String(parentId) })
+        });
+        if (res.status === 401) { window.location.href = '/auth/login'; return; }
+        const data = await res.json();
+        if (!res.ok) return;
+
+        let repliesDiv = document.getElementById('replies-' + parentId);
+        if (!repliesDiv) {
+          repliesDiv = document.createElement('div');
+          repliesDiv.id = 'replies-' + parentId;
+          repliesDiv.className = 'cmt-replies';
+          repliesDiv.style.cssText = 'margin-left:42px;margin-top:10px;display:flex;flex-direction:column;gap:10px;';
+          const block = document.getElementById('cmt-block-' + parentId);
+          block.appendChild(repliesDiv);
+        }
+
+        const replyEl = document.createElement('div');
+        replyEl.innerHTML = createCommentHTML(data, true);
+        repliesDiv.appendChild(replyEl.firstElementChild);
+
+        textarea.value = '';
+        document.getElementById('reply-form-' + parentId).style.display = 'none';
+        updateCount(1);
+      } catch (e) { console.error(e); }
+    }
+
+    function updateCount(delta) {
+      const el = document.getElementById('cmt-count');
+      if (el) {
+        const m = el.textContent.match(/\d+/);
+        const n = m ? parseInt(m[0]) + delta : delta;
+        el.textContent = '(' + n + ')';
+      }
     }
   </script>
 </body>

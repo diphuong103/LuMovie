@@ -1,4 +1,4 @@
-package com.diph.lumovie.controller.api;
+package com.diph.lumovie.controller;
 
 import com.diph.lumovie.dto.request.HistorySyncRequest;
 import com.diph.lumovie.dto.request.HistoryUpdateRequest;

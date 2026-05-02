@@ -85,4 +85,6 @@ public class OPhimService {
 
 
 //.\mvnw spring-boot:run "-Dspring-boot.run.profiles=dev"
+//https://phimapi.com/danh-sach/phim-moi-cap-nhat?page=1
+//https://phimapi.com/phim/{slug-phim}
 //http://localhost:8080/dev/seed/full?pages=2
